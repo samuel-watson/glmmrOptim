@@ -128,7 +128,7 @@ inline arma::mat add_one_mat(const arma::mat &A,
   return A2;
 }
 
-arma::uvec match_uvec(arma::uvec x, arma::uword val){
+inline arma::uvec match_uvec(arma::uvec x, arma::uword val){
   arma::uvec match_vec(x.n_elem, fill::value(-1));
   arma::uword count = 0;
   for(arma::uword j=0; j<x.n_elem; j++){

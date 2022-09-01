@@ -1,4 +1,4 @@
-#include "glmmroptim.h"
+#include "../inst/include/glmmroptim.h"
 using namespace Rcpp;
 using namespace arma;
 

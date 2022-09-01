@@ -1,4 +1,4 @@
-Package: glmmr
+Package: glmmrOptim
 Type: Package
 Title: Approximate Optimal Experimental Designs Using Generalised Linear Mixed Models
 Version: 0.1.13
@@ -16,6 +16,7 @@ Imports:
 LinkingTo: 
     Rcpp (>= 1.0.7),
     RcppArmadillo,
+    RcppParallel (>= 5.0.1),
     glmmrBase
 RoxygenNote: 7.1.2
 NeedsCompilation: yes
