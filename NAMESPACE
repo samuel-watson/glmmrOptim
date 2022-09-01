@@ -1,0 +1,6 @@
+import(Rcpp)
+import(methods)
+import(Matrix)
+useDynLib(glmmrOptim, .registration=TRUE)
+importFrom(Rcpp, evalCpp)
+exportPattern("^[[:alpha:]]+")
