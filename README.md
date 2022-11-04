@@ -1,3 +1,5 @@
+[![cran version](http://www.r-pkg.org/badges/version/glmmrOptim)](https://cran.r-project.org/web/packages/glmmrOptim)
+
 # glmmrOptim
 R package for approximate optimal experimental designs using generalised linear mixed models (GLMM) and combinatorial optimisation methods,
 built on the [glmmrBase](https://github.com/samuel-watson/glmmrBase) package.
