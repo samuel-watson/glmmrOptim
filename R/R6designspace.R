@@ -1,13 +1,13 @@
 #' A GLMM Design Space
 #' 
-#' A class-based representation of a "design space" that contains one or more \link{glmmr}[Design] objects.
+#' A class-based representation of a "design space" that contains one or more \link[glmmrBase]{Model} objects.
 #' @details 
 #' An experimental study is comprised of a collection of experimental conditions, which are one or more observations made a pre-specified locations/values
 #' of covariates. A design space represents the collection of all possible experimental conditions for the study design and plausible models describing
 #' the data generating process. The main purpose of this class is to identify optimal study designs, that is the set of `n` experimental conditions 
 #' from all possible experimental conditions that minimise the variance of a parameter of interest across the specified GLMMs.
 #' 
-#' A DesignSpace object is intialised using one or more Design objects. Design objects can be added or removed from the collection. 
+#' A `DesignSpace` object is intialised using one or more \link[glmmrBase]{Model} objects. Design objects can be added or removed from the collection. 
 #' All designs must have the same number of rows in their design matrices (X and Z) and the same number of experimental conditions. 
 #' The DesignSpace functions can modify the linked design objects.
 DesignSpace <- R6::R6Class("DesignSpace",
@@ -30,7 +30,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' we may have to observe whole cluster periods, and we need to choose which cluster periods to observe, in which case the each observation 
                    #' in a different cluster-period would have the same experimental condition identifier. Finally, we may determine that the whole cluster in 
                    #' all periods (a "sequence") is either observed or not.
-                   #' @param ... One or more glmmr \link{glmmr}[Design] objects. The designs must have an equal number of observations.
+                   #' @param ... One or more glmmrBase \link[glmmrBase]{Model} objects. The designs must have an equal number of observations.
                    #' @param weights Optional. A numeric vector of values between 0 and 1 indicating the prior weights to assign to each of the designs. The weights
                    #' are required for optimisation, if a weighted average variance is used across the designs. If not specified then designs are assumed 
                    #' to have equal weighting.
@@ -48,7 +48,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' cov1 <- Covariance$new(data = df,
                    #'                        formula = ~ (1|gr(cl)) + (1|gr(cl*t)),
                    #'                        parameters = c(0.25,0.1))
-                   #' des <- Design$new(covariance = cov1,
+                   #' des <- Model$new(covariance = cov1,
                    #'                   mean.function = mf1,
                    #'                   var_par = 1)
                    #' ds <- DesignSpace$new(des)
@@ -56,7 +56,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' cov2 <- Covariance$new(data = df,
                    #'                        formula = ~ (1|gr(cl)*ar1(t)),
                    #'                        parameters = c(0.25,0.8))
-                   #' des2 <- Design$new(covariance = cov2,
+                   #' des2 <- Model$new(covariance = cov2,
                    #'                   mean.function = mf1,
                    #'                   var_par = 1)
                    #' ds$add(des2)
@@ -79,7 +79,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                      i <- 0
                      for (item in list(...)) {
                        i <- i + 1
-                       if(!is(item,"Design"))stop(paste0(item," is not a Design"))
+                       if(!(is(item,"Model")|is(item,"ModelMCML")))stop("Not all Model objects")
                        samp.size[i] <- item$n()
                      }
                      #print(samp.size)
@@ -128,7 +128,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' @examples 
                    #' #See examples for constructing the class
                    remove = function(index) {
-                     if (private$length() == 0) return(NULL)
+                     if (length(private$designs) == 0) return(NULL)
                      private$designs <- private$designs[-index]
                    },
                    #' @description 
@@ -216,7 +216,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #'   formula = ~ (1|gr(cl)),
                    #'   parameters = c(0.25)
                    #' )
-                   #' des <- Design$new(
+                   #' des <- Model$new(
                    #'   covariance = cov1,
                    #'   mean.function = mf1,
                    #'   var_par = 1
@@ -224,7 +224,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' ds <- DesignSpace$new(des)
                    #' 
                    #' #find the optimal design of size 30 individuals
-                   #' opt <- ds$optimal(30,C=c(rep(0,5),1))
+                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1)))
                    #' 
                    #' #let the experimental condition be the cluster
                    #' # these experimental conditions are independent of one another
@@ -232,9 +232,9 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' #now find the optimal 4 clusters to include
                    #' # approximately, finding the weights for each condition
                    #' # note it will ignore m and just return the weights
-                   #' opt <- ds$optimal(4,C=c(rep(0,5),1))
+                   #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
                    #' # or use the exact algorithm
-                   #' opt <- ds$optimal(4,C=c(rep(0,5),1),force_hill = TRUE)
+                   #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)),force_hill = TRUE)
                    #' 
                    #' #robust optimisation using two designs
                    #'   cov2 <- Covariance$new(
@@ -242,18 +242,14 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #'   formula = ~ (1|gr(cl)*ar1(t)),
                    #'   parameters = c(0.25,0.8)
                    #' )
-                   #' des2 <- Design$new(
+                   #' des2 <- Model$new(
                    #'   covariance = cov1,
                    #'   mean.function = mf1,
                    #'   var_par = 1
                    #' )
                    #' ds <- DesignSpace$new(des,des2)
                    #' #weighted average
-                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),
-                   #'    robust_function = "weighted")
-                   #' #and minimax
-                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),
-                   #'    verbose=FALSE,robust_function = "minimax")
+                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
                    optimal = function(m,
                                       C,
                                       V0=NULL,
@@ -317,7 +313,7 @@ each condition will be reported below."))
                      
                      if(verbose&uncorr&!force_hill)message("Experimental conditions uncorrelated, using second-order cone program")
                      if(verbose&uncorr&force_hill)message("Experimental conditions uncorrelated, but using hill climbing algorithm")
-                     if(verbose&!uncorr)message("Experimental conditions correlated, using hill climbing algorithm")
+                     if(verbose&!uncorr)message("Experimental conditions correlated, using combinatorial search algorithms")
                      
                      if(uncorr&!force_hill){
                        # this returns the experimental designs to keep
@@ -402,9 +398,9 @@ each condition will be reported below."))
                          X_list[[i]] <- X_list[[i]][idx.nodup,]
                          Z_list[[i]] <- Z_list[[i]][idx.nodup,]
                          if(is.null(rm_cols)){
-                           w_diag[,i] <- private$designs[[i]]$.__enclos_env__$private$W@x[idx.nodup]
+                           w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[idx.nodup]
                          } else {
-                           w_diag[,i] <- private$designs[[i]]$.__enclos_env__$private$W@x[-zero_idx][idx.nodup]
+                           w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[-zero_idx][idx.nodup]
                          }
                        }
                        
