@@ -487,7 +487,7 @@ private:
   }
   
   Eigen::ArrayXd eval(bool userm = true, int obs = 0){
-    Eigen::ArrayXd val_in_mat = Eigen::ArrayXd::Constant(10000);
+    Eigen::ArrayXd val_in_mat = Eigen::ArrayXd::Constant(k_,10000);
     if(userm){
       bool obsisin = (idx_in_ == obs).any();
       if(obsisin){

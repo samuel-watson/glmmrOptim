@@ -54,11 +54,11 @@ Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in,
   glmmr::MatrixField<Eigen::MatrixXd> Dfield(ndesign);
   glmmr::MatrixField<Eigen::MatrixXd> V0field(ndesign);
   for(int j=0; j<ndesign; j++){
-    Cfield.add(C_list[j]);
-    Xfield.add(X_list[j]);
-    Zfield.add(Z_list[j]);
-    Dfield.add(D_list[j]);
-    V0field.add(V0_list[j]);
+    Cfield.insert(j,C_list[j]);
+    Xfield.insert(j,X_list[j]);
+    Zfield.insert(j,Z_list[j]);
+    Dfield.insert(j,D_list[j]);
+    V0field.insert(j,V0_list[j]);
   }
   
   

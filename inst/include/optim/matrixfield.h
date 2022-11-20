@@ -16,8 +16,13 @@ class MatrixField{
       data.reserve(n);
     };
     
-    MatrixField(const glmmr::MatrixField<T> &field){
-      data = std::vector<T*>(field.data());
+    MatrixField(glmmr::MatrixField<T> &field){
+      for(int i = 0; i < field.size(); i++)data.push_back(field.get_ptr(i));
+    }
+    
+    void insert(int n, T matrix){
+      T* mat_ptr = new T(matrix);
+      data[n] = mat_ptr;
     }
     
     void add(T matrix){
