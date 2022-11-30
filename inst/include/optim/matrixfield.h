@@ -3,6 +3,7 @@
 
 #include <cmath> 
 #include <RcppEigen.h>
+#include <memory>
 
 namespace glmmr {
 
@@ -10,47 +11,47 @@ namespace glmmr {
 template<typename T>
 class MatrixField{
   public: 
-    std::vector<T*> data;
+    std::vector<std::shared_ptr<T> > data;
     
     MatrixField(int n){
       data.reserve(n);
     };
     
-    MatrixField(glmmr::MatrixField<T> &field){
-      for(int i = 0; i < field.size(); i++)data.push_back(field.get_ptr(i));
-    }
+    MatrixField(){};
     
-    void insert(int n, T matrix){
-      T* mat_ptr = new T(matrix);
-      data[n] = mat_ptr;
+    MatrixField(const glmmr::MatrixField<T> &field){
+      data.reserve(field.data.size());
+      data = field.data;
     }
     
     void add(T matrix){
-      T* mat_ptr = new T(matrix);
-      data.push_back(mat_ptr);
+      //T* mat_ptr = new T(matrix);
+      //data.push_back(mat_ptr);
+      data.push_back(std::make_shared<T>(matrix));
     }
     
-    // void add(Rcpp::NumericVector matrix){
-    //   T* mat_ptr = new T(Rcpp::as<Eigen::Map<T> >(matrix));
+    
+    // template<typename Mat>
+    // void add(const Mat& matrix){ //Rcpp::NumericMatrix matrix
+    //   std::shared_ptr<T> mat_ptr = std::make_shared<T>(Rcpp::as<Eigen::Map<T> >(matrix));
+    //   //T* mat_ptr = new T(Rcpp::as<Eigen::Map<T> >(matrix));
     //   data.push_back(mat_ptr);
     // }
     
-    template<typename Mat>
-    void add(const Mat& matrix){ //Rcpp::NumericMatrix matrix
-      T* mat_ptr = new T(Rcpp::as<Eigen::Map<T> >(matrix));
-      data.push_back(mat_ptr);
-    }
-    
     T operator()(int i)
     {
-      return *(reinterpret_cast<T *>(data[i]));
+      //return *(reinterpret_cast<T *>(data[i]));
+      return *(data[i]);
     }
     
     Eigen::RowVectorXd get_row(int n, int i){
       return data[n]->row(i);
     }
     
-    T* get_ptr(int n){
+    // T* get_ptr(int n){
+    //   return data[n];
+    // }
+    std::shared_ptr<T> get_ptr(int n){
       return data[n];
     }
     
@@ -74,11 +75,13 @@ class MatrixField{
       return data[i]->cols();
     }
     
-    ~MatrixField(){
-      for(int i = data.size()-1; i >= 0; i--){
-        delete data[i];
-      }
-    }
+    //~MatrixField();
+    
+    // ~MatrixField(){
+    //   for(int i = data.size()-1; i >= 0; i--){
+    //     delete data[i];
+    //   }
+    // }
     
 };
 

@@ -28,7 +28,7 @@
 //' @return A list containing: a vector of experimental condition indexes in the optimal design, the variance of the optimal design,
 //'  the number of function calls and matrix operations, and an indicator for whether a Bayesian model was used.
 // [[Rcpp::export]]
-Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in, 
+Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in,  
                           int n,
                           Rcpp::List C_list, 
                           Rcpp::List X_list, 
@@ -46,25 +46,24 @@ Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in,
                           bool trace = true,
                           bool uncorr = false,
                           bool bayes = false) {
-  
   int ndesign = weights.size();
-  glmmr::MatrixField<Eigen::VectorXd> Cfield(ndesign);
-  glmmr::MatrixField<Eigen::MatrixXd> Xfield(ndesign);
-  glmmr::MatrixField<Eigen::MatrixXd> Zfield(ndesign);
-  glmmr::MatrixField<Eigen::MatrixXd> Dfield(ndesign);
-  glmmr::MatrixField<Eigen::MatrixXd> V0field(ndesign);
+  glmmr::MatrixField<Eigen::VectorXd> Cfield;
+  glmmr::MatrixField<Eigen::MatrixXd> Xfield;
+  glmmr::MatrixField<Eigen::MatrixXd> Zfield;
+  glmmr::MatrixField<Eigen::MatrixXd> Dfield;
+  glmmr::MatrixField<Eigen::MatrixXd> V0field;
   for(int j=0; j<ndesign; j++){
-    Cfield.insert(j,C_list[j]);
-    Xfield.insert(j,X_list[j]);
-    Zfield.insert(j,Z_list[j]);
-    Dfield.insert(j,D_list[j]);
-    V0field.insert(j,V0_list[j]);
+    Cfield.add(Eigen::VectorXd(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(C_list[j])));
+    Xfield.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(X_list[j])));
+    Zfield.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(Z_list[j])));
+    Dfield.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(D_list[j])));
+    V0field.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(V0_list[j])));
   }
-  
-  
+
   glmmr::OptimDesign hc(idx_in, n, Cfield, Xfield, Zfield, Dfield,
-                  w_diag,max_obs,
-                  weights, exp_cond, any_fix, nfix, V0field, rd_mode, trace, uncorr, bayes);
+                        w_diag,max_obs,weights, exp_cond, any_fix, 
+                        nfix, V0field, rd_mode, trace, uncorr, bayes);
+
   if(type==0)hc.local_search();
   if(type==1){
     hc.local_search();

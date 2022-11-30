@@ -65,17 +65,17 @@ public:
 public:
   OptimDesign(Eigen::ArrayXi idx_in, 
               int n,
-              glmmr::MatrixField<Eigen::VectorXd> C_list, 
-              glmmr::MatrixField<Eigen::MatrixXd> X_list, 
-              glmmr::MatrixField<Eigen::MatrixXd> Z_list, 
-              glmmr::MatrixField<Eigen::MatrixXd> D_list,
+              const glmmr::MatrixField<Eigen::VectorXd> &C_list, 
+              const glmmr::MatrixField<Eigen::MatrixXd> &X_list, 
+              const glmmr::MatrixField<Eigen::MatrixXd> &Z_list, 
+              const glmmr::MatrixField<Eigen::MatrixXd> &D_list,
               Eigen::MatrixXd w_diag,
               Eigen::ArrayXi max_obs,
               Eigen::VectorXd weights,
               Eigen::ArrayXi exp_cond,
               int any_fix,
               Eigen::ArrayXi nfix,
-              glmmr::MatrixField<Eigen::MatrixXd> V0_list,
+              const glmmr::MatrixField<Eigen::MatrixXd> &V0_list,
               int rd_mode = 0, 
               bool trace=false,
               bool uncorr=false,
@@ -111,8 +111,8 @@ public:
   matops_(0),
   A_list_(nmax_*nlist_,nmax_), //set to zero
   rm1A_list_(nmax_*nlist_,nmax_),//set to zero
-  M_list_(nlist_),
-  M_list_sub_(nlist_),
+  M_list_(),
+  M_list_sub_(),
   V0_list_(V0_list),
   nfix_(nfix), 
   rd_mode_(rd_mode), 
@@ -131,7 +131,6 @@ public:
   }
   
   void build_XZ(){
-    // set to zero 
     curr_obs_ = Eigen::ArrayXi::Zero(curr_obs_.size());
     p_ = Eigen::ArrayXi::Zero(nlist_);
     q_ = Eigen::ArrayXi::Zero(nlist_);
@@ -140,20 +139,18 @@ public:
     count_exp_cond_rm_ = Eigen::ArrayXi::Zero(nmax_);
     A_list_ = Eigen::MatrixXd::Zero(nmax_*nlist_,nmax_);
     rm1A_list_ = Eigen::MatrixXd::Zero(nmax_*nlist_,nmax_);
+
     
-    //Rcpp::Rcout << "\nStart XZ"
     std::sort(idx_in_.data(),idx_in_.data()+idx_in_.size());
-    
     for(int i=0; i<idx_in_.size(); i++){
       curr_obs_(idx_in_(i)-1)++;
     }
-    
+
     idx_in_sub_ = idx_in_;
     rows_in_design_ = Eigen::ArrayXi::LinSpaced(nmax_,0,nmax_-1);
-   
+
     Eigen::VectorXd vals(nlist_);
     int rowcount;
-    
     for(int j=0; j<nlist_;j++){
       p_(j) = X_all_list_.cols(j);
       q_(j) = Z_all_list_.cols(j);
@@ -176,16 +173,19 @@ public:
        Eigen::MatrixXd tmp = Z.topRows(rowcount)*Dt*Z.topRows(rowcount).transpose();
        Eigen::MatrixXd I = Eigen::MatrixXd::Identity(tmp.rows(),tmp.cols());
        tmp.diagonal() += w_diag.head(rowcount);
-       M_list_.replace(j, X.topRows(rowcount).transpose() * tmp.llt().solve(I) * X.topRows(rowcount));
-       M_list_sub_.replace(j,M_list_(j));
+       Eigen::MatrixXd M = X.topRows(rowcount).transpose() * tmp.llt().solve(I) * X.topRows(rowcount);
+   
+       
+       M_list_.add(M);
+       M_list_sub_.add(M);
       if(uncorr_){
         vals(j) = bayes_ ? glmmr::maths::c_obj_fun( M_list_(j) + V0_list_(j), C_list_(j)) : glmmr::maths::c_obj_fun( M_list_(j), C_list_(j));
       } else {
         A_list_.block(j*nmax_,0,r_in_design_,r_in_design_) = tmp.llt().solve(I);
-        vals(j) = bayes_ ? glmmr::maths::c_obj_fun( X.topRows(rowcount).transpose() * A_list_.block(j*nmax_,0,r_in_design_,r_in_design_) * X.topRows(rowcount) + 
+        vals(j) = bayes_ ? glmmr::maths::c_obj_fun( X.topRows(rowcount).transpose() * A_list_.block(j*nmax_,0,r_in_design_,r_in_design_) * X.topRows(rowcount) +
           V0_list_(j), C_list_(j)) : glmmr::maths::c_obj_fun( X.topRows(rowcount).transpose() * A_list_.block(j*nmax_,0,r_in_design_,r_in_design_) * X.topRows(rowcount), C_list_(j));
       }
-      
+
     }
     new_val_ = rd_mode_ == 1 ? vals.transpose()*weights_ : vals.maxCoeff();
     if(trace_)Rcpp::Rcout << "\nval: " << new_val_;
@@ -213,7 +213,7 @@ public:
       Eigen::Index minrow, mincol;
       double newval = val_swap.minCoeff(&minrow,&mincol);
       diff = newval - val_;
-      if (trace_) Rcpp::Rcout << " diff: " << diff;
+      if (trace_) Rcpp::Rcout << " diff: " << diff << " newval " << newval << " val " << val_ ;
       
       if(diff < 0){
         int target = (int)mincol;//floor((int)minval/k_); 
@@ -224,6 +224,7 @@ public:
         } else {
           rm_obs(rm_target+1);
           new_val_ = add_obs(target+1,true,true);
+          Rcpp::Rcout << "\ncoord: " << target << " " << rm_target <<   " newval: " << new_val_; //<< "\nval swap: " << val_swap;
         }
       }
     }
@@ -375,6 +376,7 @@ private:
         X12 -= sig112A * X1ex;
         Eigen::MatrixXd iden = Eigen::MatrixXd::Identity(sig2.rows(),sig2.cols());
         M = userm ? M_list_sub_(idx) + X12.transpose() * sig2.llt().solve(iden) * X12 : M_list_(idx) + X12.transpose() * sig2.llt().solve(iden) * X12;
+        
       } else {
         n_already_in = idxexist.size();
         Eigen::MatrixXd X = Eigen::MatrixXd::Zero(n_already_in + n_to_add,p_(idx));
@@ -399,8 +401,7 @@ private:
         M = X.transpose() * A * X;
       }
       issympd = glmmr::Eigen_ext::issympd(M);
-      
-      if(issympd){
+      if(!issympd){
         if(keep){
           if(idx==0)r_in_design_ = A.rows();
           M_list_.replace(idx,M);
@@ -412,7 +413,7 @@ private:
         break;
       }
     }
-    if(keep && issympd){
+    if(keep && !issympd){
       if(userm){
         idx_in_ = join_idx(idx_in_rm_,inobs);
         curr_obs_(inobs-1)++;
@@ -424,6 +425,7 @@ private:
         count_exp_cond_(idx_in_.size()-1) = n_to_add;
       }
     }
+    
     double rtn = rd_mode_ == 1 ? vals.transpose()*weights_ : vals.maxCoeff();
     if(rtn < 10000){
       return rtn;
@@ -496,7 +498,7 @@ private:
         } else {
           rm_obs(obs);
         }
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int i = 1; i < k_+1; ++i) {
           if(obs != i && curr_obs_(i-1)<max_obs_(i-1)){
             if(uncorr_){
