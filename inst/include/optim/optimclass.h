@@ -197,6 +197,43 @@ public:
     if (trace_) Rcpp::Rcout << "\nLocal search";
     int i = 0;
     double diff = -1.0;
+    
+    // rm_obs(1+14);
+    // double tmp_new_val_ = add_obs(1+0,true,false);
+    // Rcpp::Rcout << "\nnokeep " << tmp_new_val_;
+    // tmp_new_val_ = add_obs(1+0,true,false);
+    // Rcpp::Rcout << "\nkeep " << tmp_new_val_;
+    
+      // i++;
+      // val_ = new_val_;
+      // if (trace_) Rcpp::Rcout << "\nIter " << i << ": Var: " << val_;
+      // // evaluate the swaps
+      // Eigen::ArrayXXd val_swap = Eigen::ArrayXXd::Constant(k_,k_,10000);
+      // for(int j=1; j < k_+1; j++){
+      //   if((idx_in_ == j).any()){
+      //     Eigen::ArrayXd val_in_vec = eval(true,j); //eval is a member function of this class
+      //     val_swap.row(j-1) = val_in_vec.transpose();
+      //   }
+      // }
+      // 
+      // Eigen::Index minrow, mincol;
+      // double newval = val_swap.minCoeff(&minrow,&mincol);
+      // diff = newval - val_;
+      // if (trace_) Rcpp::Rcout << " diff: " << diff << " newval " << newval << " val " << val_ ;
+      // 
+      // if(diff < 0){
+      //   int target = (int)mincol;//floor((int)minval/k_);
+      //   int rm_target = (int)minrow;//((int)minval) - target*k_;
+      //   if(uncorr_){
+      //     rm_obs_uncor(1+(int)minrow);
+      //     new_val_ = add_obs_uncor(1+(int)mincol,true,true);
+      //   } else {
+      //     rm_obs(1+(int)minrow);
+      //     new_val_ = add_obs(1+(int)mincol,true,true);
+      //     Rcpp::Rcout << "\ncoord: " << target << " " << rm_target <<   " newval: " << new_val_ << " sval: " << val_swap(rm_target,target); //<< "\nval swap: " << val_swap;
+      //   }
+      // }
+    
     while(diff < 0){
       i++;
       val_ = new_val_;
@@ -209,22 +246,19 @@ public:
           val_swap.row(j-1) = val_in_vec.transpose();
         }
       }
-      
+
       Eigen::Index minrow, mincol;
       double newval = val_swap.minCoeff(&minrow,&mincol);
       diff = newval - val_;
       if (trace_) Rcpp::Rcout << " diff: " << diff << " newval " << newval << " val " << val_ ;
-      
+
       if(diff < 0){
-        int target = (int)mincol;//floor((int)minval/k_); 
-        int rm_target = (int)minrow;//((int)minval) - target*k_;
         if(uncorr_){
-          rm_obs_uncor(rm_target+1);
-          new_val_ = add_obs_uncor(target+1,true,true);
+          rm_obs_uncor(1+(int)minrow);
+          new_val_ = add_obs_uncor(1+(int)mincol,true,true);
         } else {
-          rm_obs(rm_target+1);
-          new_val_ = add_obs(target+1,true,true);
-          Rcpp::Rcout << "\ncoord: " << target << " " << rm_target <<   " newval: " << new_val_; //<< "\nval swap: " << val_swap;
+          rm_obs(1+(int)minrow);
+          new_val_ = add_obs(1+(int)mincol,true,true);
         }
       }
     }
@@ -288,11 +322,10 @@ private:
     Eigen::ArrayXi rowstorm = get_rows(rm_cond(0));
     idx_in_rm_ = glmmr::algo::uvec_minus(idx_in_,rm_cond(0));
     Eigen::ArrayXi idxexist = get_all_rows(idx_in_rm_);
-    
     for (int idx = 0; idx < nlist_; ++idx) {
       matops_++;
       Eigen::MatrixXd A1 = A_list_.block(idx*nmax_,0,r_in_design_,r_in_design_);
-      const Eigen::MatrixXd rm1A = glmmr::algo::remove_one_many_mat(A1, rowstorm);
+      Eigen::MatrixXd rm1A = glmmr::algo::remove_one_many_mat(A1, rowstorm);
       if(idx==0)r_in_rm_ = rm1A.rows();
       rm1A_list_.block(idx*nmax_,0,r_in_rm_,r_in_rm_) = rm1A;
       int p = X_all_list_.cols(idx);
@@ -344,6 +377,7 @@ private:
   double add_obs(int inobs,
                  bool userm = true,
                  bool keep = false){
+    
     Eigen::ArrayXi rowstoadd = glmmr::Eigen_ext::find(exp_cond_,inobs);
     Eigen::ArrayXi idxvec = userm ? idx_in_rm_ : idx_in_;
     Eigen::ArrayXi idxexist = get_all_rows(idxvec);
@@ -351,55 +385,76 @@ private:
     int n_already_in = idxexist.size();
     Eigen::ArrayXi idx_in_vec = Eigen::ArrayXi::Zero(n_already_in + n_to_add);
     Eigen::VectorXd vals(nlist_);
-    bool issympd = true;
+    bool issympd;
     int r_in_design_tmp_ = r_in_design_;
     
     for (int idx = 0; idx < nlist_; ++idx) {
-      Eigen::MatrixXd M;
+      
       Eigen::MatrixXd A = userm ? rm1A_list_.block(idx*nmax_,0,r_in_rm_,r_in_rm_) : 
         A_list_.block(idx*nmax_,0,r_in_design_tmp_,r_in_design_tmp_);
       
-      if(!keep){
-        Eigen::MatrixXd Z1 = Z_all_list_(idx);
-        Eigen::MatrixXd Z2 = glmmr::Eigen_ext::mat_indexing(Z1,rowstoadd,Eigen::ArrayXi::LinSpaced(Z1.cols(),0,Z1.cols()-1));
-        Z1 = glmmr::Eigen_ext::mat_indexing(Z1,idxexist,Eigen::ArrayXi::LinSpaced(Z1.cols(),0,Z1.cols()-1));
-        Eigen::MatrixXd sig112 = Z2 * D_list_(idx) * Z1.transpose();
-        Eigen::MatrixXd sig112A = sig112 * A;
-        Eigen::MatrixXd sig2 = Z2 * D_list_(idx) * Z2.transpose();
-        for(int i = 0; i < sig2.rows(); i++){
-          sig2(i,i) += W_all_diag_(rowstoadd(i),idx);
-        }
-        sig2.noalias() -= sig112A*sig112.transpose();
-        Eigen::MatrixXd X12 = X_all_list_(idx);
-        Eigen::MatrixXd X1ex = glmmr::Eigen_ext::mat_indexing(X12,idxexist,Eigen::ArrayXi::LinSpaced(X12.cols(),0,X12.cols()-1));
-        X12 = glmmr::Eigen_ext::mat_indexing(X12,rowstoadd,Eigen::ArrayXi::LinSpaced(X12.cols(),0,X12.cols()-1));
-        X12 -= sig112A * X1ex;
-        Eigen::MatrixXd iden = Eigen::MatrixXd::Identity(sig2.rows(),sig2.cols());
-        M = userm ? M_list_sub_(idx) + X12.transpose() * sig2.llt().solve(iden) * X12 : M_list_(idx) + X12.transpose() * sig2.llt().solve(iden) * X12;
-        
-      } else {
-        n_already_in = idxexist.size();
-        Eigen::MatrixXd X = Eigen::MatrixXd::Zero(n_already_in + n_to_add,p_(idx));
-        idx_in_vec = Eigen::ArrayXi::Zero(n_already_in + n_to_add);
-        idx_in_vec.segment(0,n_already_in) = idxexist;
-        Eigen::MatrixXd X0 = X_all_list_(idx);
-        X.block(0,0,n_already_in,X.cols()) = glmmr::Eigen_ext::mat_indexing(X0,idxexist,Eigen::ArrayXi::LinSpaced(X0.cols(),0,X0.cols()-1));
-        
-        for(int j = 0; j < n_to_add; j++){
-          Eigen::RowVectorXd z_j = Z_all_list_.get_row(idx,rowstoadd(j));
-          Eigen::MatrixXd z_d = Z_all_list_(idx);
-          z_d = glmmr::Eigen_ext::mat_indexing(z_d,idx_in_vec.segment(0,n_already_in),Eigen::ArrayXi::LinSpaced(z_d.cols(),0,z_d.cols()-1));
-          double sig_jj = z_j * D_list_(idx) * z_j.transpose(); 
-          sig_jj += W_all_diag_(rowstoadd(j),idx);
-          Eigen::VectorXd f = z_d * D_list_(idx) * z_j.transpose();
-          A = glmmr::algo::add_one_mat(A, sig_jj,f);
-          idx_in_vec(n_already_in) = rowstoadd(j);
-          X.row(n_already_in) = X_all_list_.get_row(idx,rowstoadd(j));  
-          n_already_in++;
-        }
-        //check if positive definite
-        M = X.transpose() * A * X;
+      n_already_in = idxexist.size();
+      Eigen::MatrixXd X = Eigen::MatrixXd::Zero(n_already_in + n_to_add,p_(idx));
+      idx_in_vec = Eigen::ArrayXi::Zero(n_already_in + n_to_add);
+      idx_in_vec.segment(0,n_already_in) = idxexist;
+      Eigen::MatrixXd X0 = X_all_list_(idx);
+      X.block(0,0,n_already_in,X.cols()) = glmmr::Eigen_ext::mat_indexing(X0,idxexist,Eigen::ArrayXi::LinSpaced(X0.cols(),0,X0.cols()-1));
+      Eigen::MatrixXd D = D_list_(idx);
+      for(int j = 0; j < n_to_add; j++){
+        Eigen::RowVectorXd z_j = Z_all_list_.get_row(idx,rowstoadd(j));
+        int zcols = Z_all_list_.cols(idx);
+        Eigen::MatrixXd z_d = glmmr::Eigen_ext::mat_indexing(Z_all_list_(idx),idx_in_vec.segment(0,n_already_in),Eigen::ArrayXi::LinSpaced(zcols,0,zcols-1));
+        double sig_jj = z_j * D * z_j.transpose(); 
+        sig_jj += W_all_diag_(rowstoadd(j),idx);
+        Eigen::VectorXd f = z_d * D * z_j.transpose();
+        A = glmmr::algo::add_one_mat(A, sig_jj,f);
+        idx_in_vec(n_already_in) = rowstoadd(j);
+        X.row(n_already_in) = X_all_list_.get_row(idx,rowstoadd(j));  
+        n_already_in++;
       }
+      Eigen::MatrixXd M = X.transpose() * A * X;
+      
+      // if(!keep){
+      //   Eigen::MatrixXd Z1 = Z_all_list_(idx);
+      //   Eigen::MatrixXd Z2 = glmmr::Eigen_ext::mat_indexing(Z1,rowstoadd,Eigen::ArrayXi::LinSpaced(Z1.cols(),0,Z1.cols()-1));
+      //   Z1 = glmmr::Eigen_ext::mat_indexing(Z1,idxexist,Eigen::ArrayXi::LinSpaced(Z1.cols(),0,Z1.cols()-1));
+      //   Eigen::MatrixXd sig112 = Z2 * D_list_(idx) * Z1.transpose();
+      //   Eigen::MatrixXd sig112A = sig112 * A;
+      //   Eigen::MatrixXd sig2 = Z2 * D_list_(idx) * Z2.transpose();
+      //   for(int i = 0; i < sig2.rows(); i++){
+      //     sig2(i,i) += W_all_diag_(rowstoadd(i),idx);
+      //   }
+      //   sig2.noalias() -= sig112A*sig112.transpose();
+      //   Eigen::MatrixXd X12 = X_all_list_(idx);
+      //   Eigen::MatrixXd X1ex = glmmr::Eigen_ext::mat_indexing(X12,idxexist,Eigen::ArrayXi::LinSpaced(X12.cols(),0,X12.cols()-1));
+      //   X12 = glmmr::Eigen_ext::mat_indexing(X12,rowstoadd,Eigen::ArrayXi::LinSpaced(X12.cols(),0,X12.cols()-1));
+      //   X12 -= sig112A * X1ex;
+      //   Eigen::MatrixXd iden = Eigen::MatrixXd::Identity(sig2.rows(),sig2.cols());
+      //   M = userm ? M_list_sub_(idx) + X12.transpose() * sig2.llt().solve(iden) * X12 : M_list_(idx) + X12.transpose() * sig2.llt().solve(iden) * X12;
+      //   Rcpp::Rcout << "\nnot keep M:\n" << M;
+      // } else {
+      //   n_already_in = idxexist.size();
+      //   Eigen::MatrixXd X = Eigen::MatrixXd::Zero(n_already_in + n_to_add,p_(idx));
+      //   idx_in_vec = Eigen::ArrayXi::Zero(n_already_in + n_to_add);
+      //   idx_in_vec.segment(0,n_already_in) = idxexist;
+      //   Eigen::MatrixXd X0 = X_all_list_(idx);
+      //   X.block(0,0,n_already_in,X.cols()) = glmmr::Eigen_ext::mat_indexing(X0,idxexist,Eigen::ArrayXi::LinSpaced(X0.cols(),0,X0.cols()-1));
+      //   
+      //   for(int j = 0; j < n_to_add; j++){
+      //     Eigen::RowVectorXd z_j = Z_all_list_.get_row(idx,rowstoadd(j));
+      //     Eigen::MatrixXd z_d = Z_all_list_(idx);
+      //     z_d = glmmr::Eigen_ext::mat_indexing(z_d,idx_in_vec.segment(0,n_already_in),Eigen::ArrayXi::LinSpaced(z_d.cols(),0,z_d.cols()-1));
+      //     double sig_jj = z_j * D_list_(idx) * z_j.transpose(); 
+      //     sig_jj += W_all_diag_(rowstoadd(j),idx);
+      //     Eigen::VectorXd f = z_d * D_list_(idx) * z_j.transpose();
+      //     A = glmmr::algo::add_one_mat(A, sig_jj,f);
+      //     idx_in_vec(n_already_in) = rowstoadd(j);
+      //     X.row(n_already_in) = X_all_list_.get_row(idx,rowstoadd(j));  
+      //     n_already_in++;
+      //   }
+      //   M = X.transpose() * A * X;
+      //   Rcpp::Rcout << "\nkeep M\n:" << M;
+      // }
       issympd = glmmr::Eigen_ext::issympd(M);
       if(!issympd){
         if(keep){
@@ -425,7 +480,6 @@ private:
         count_exp_cond_(idx_in_.size()-1) = n_to_add;
       }
     }
-    
     double rtn = rd_mode_ == 1 ? vals.transpose()*weights_ : vals.maxCoeff();
     if(rtn < 10000){
       return rtn;
@@ -491,29 +545,29 @@ private:
   Eigen::ArrayXd eval(bool userm = true, int obs = 0){
     Eigen::ArrayXd val_in_mat = Eigen::ArrayXd::Constant(k_,10000);
     if(userm){
-      bool obsisin = (idx_in_ == obs).any();
-      if(obsisin){
-        if(uncorr_){
-          rm_obs_uncor(obs);
-        } else {
-          rm_obs(obs);
-        }
-//#pragma omp parallel for
-        for (int i = 1; i < k_+1; ++i) {
-          if(obs != i && curr_obs_(i-1)<max_obs_(i-1)){
-            if(uncorr_){
-              val_in_mat(i-1) = add_obs_uncor(i,true,false);
-              
-            } else {
-              val_in_mat(i-1) = add_obs(i,true,false);
-            }
-          } 
-        }
-        matops_ += k_*nlist_;
-        fcalls_ += k_*nlist_;
-      } 
-    } else {
+      if(uncorr_){
+        rm_obs_uncor(obs);
+      } else {
+        rm_obs(obs);
+      }
+#if defined(_OPENMP)
 #pragma omp parallel for
+#endif
+      for (int i = 1; i < k_+1; ++i) {
+        if(obs != i && curr_obs_(i-1)<max_obs_(i-1)){
+          if(uncorr_){
+            val_in_mat(i-1) = add_obs_uncor(i,true,false);
+          } else {
+            val_in_mat(i-1) = add_obs(i,true,false);
+          }
+        } 
+      }
+      matops_ += k_*nlist_;
+      fcalls_ += k_*nlist_;
+    } else {
+#if defined(_OPENMP)
+#pragma omp parallel for
+#endif
       for (int i = 1; i < k_+1; ++i) {
         if(curr_obs_(i-1)<max_obs_(i-1)){
           if(uncorr_){

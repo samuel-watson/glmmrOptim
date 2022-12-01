@@ -11,7 +11,7 @@ namespace glmmr {
 template<typename T>
 class MatrixField{
   public: 
-    std::vector<std::shared_ptr<T> > data;
+    std::vector<std::unique_ptr<T> > data;
     
     MatrixField(int n){
       data.reserve(n);
@@ -20,27 +20,19 @@ class MatrixField{
     MatrixField(){};
     
     MatrixField(const glmmr::MatrixField<T> &field){
-      data.reserve(field.data.size());
-      data = field.data;
+      for(int i=0; i < field.data.size(); i++){
+        data.push_back(std::make_unique<T>(*(field.data[i])));
+      }
+      // data.reserve(field.data.size());
+      // data = field.data;
     }
     
     void add(T matrix){
-      //T* mat_ptr = new T(matrix);
-      //data.push_back(mat_ptr);
-      data.push_back(std::make_shared<T>(matrix));
+      data.push_back(std::make_unique<T>(matrix));
     }
-    
-    
-    // template<typename Mat>
-    // void add(const Mat& matrix){ //Rcpp::NumericMatrix matrix
-    //   std::shared_ptr<T> mat_ptr = std::make_shared<T>(Rcpp::as<Eigen::Map<T> >(matrix));
-    //   //T* mat_ptr = new T(Rcpp::as<Eigen::Map<T> >(matrix));
-    //   data.push_back(mat_ptr);
-    // }
     
     T operator()(int i)
     {
-      //return *(reinterpret_cast<T *>(data[i]));
       return *(data[i]);
     }
     
@@ -51,7 +43,7 @@ class MatrixField{
     // T* get_ptr(int n){
     //   return data[n];
     // }
-    std::shared_ptr<T> get_ptr(int n){
+    std::unique_ptr<T> get_ptr(int n){
       return data[n];
     }
     
@@ -75,13 +67,9 @@ class MatrixField{
       return data[i]->cols();
     }
     
-    //~MatrixField();
-    
-    // ~MatrixField(){
-    //   for(int i = data.size()-1; i >= 0; i--){
-    //     delete data[i];
-    //   }
-    // }
+    ~MatrixField(){
+      data.clear();
+    }
     
 };
 
