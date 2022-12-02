@@ -10,7 +10,16 @@
 #include "optimmaths.h"
 
 #ifdef _OPENMP
-#include <omp.h>
+#include <omp.h>     
+#else
+// for machines with compilers void of openmp support
+#define omp_get_num_threads()  1
+#define omp_get_thread_num()   0
+#define omp_get_max_threads()  1
+#define omp_get_thread_limit() 1
+#define omp_get_num_procs()    1
+#define omp_set_nested(a)   // empty statement to remove the call
+#define omp_get_wtime()        0
 #endif
 
 
@@ -550,9 +559,8 @@ private:
       } else {
         rm_obs(obs);
       }
-#if defined(_OPENMP)
+
 #pragma omp parallel for
-#endif
       for (int i = 1; i < k_+1; ++i) {
         if(obs != i && curr_obs_(i-1)<max_obs_(i-1)){
           if(uncorr_){
@@ -565,9 +573,8 @@ private:
       matops_ += k_*nlist_;
       fcalls_ += k_*nlist_;
     } else {
-#if defined(_OPENMP)
+
 #pragma omp parallel for
-#endif
       for (int i = 1; i < k_+1; ++i) {
         if(curr_obs_(i-1)<max_obs_(i-1)){
           if(uncorr_){
