@@ -12,7 +12,7 @@ Description: Optimal design analysis algorithms for any study design that can be
   modelled as a generalised linear mixed model including cluster randomised trials, 
   cohort studies, spatial and spatio-temporal epidemiological models, and split-plot designs. This 
   package uses the `glmmrBase` package for model specification, see <https://github.com/samuel-watson/glmmrBase/blob/master/README.md> for a 
-  detailed manual on model specification.
+  detailed manual on model specification. A detailed discussion of the methods in this package can be found in Watson et al. (2022) <arXiv:2207.09183>
 License: GPL (>= 2)
 Imports: 
     methods,
@@ -26,8 +26,8 @@ RoxygenNote: 7.2.1
 NeedsCompilation: yes
 Author: Sam Watson [aut, cre],
         Yi Pan [aut]
-URL: https://github.com/samuel-watson/glmmr
-BugReports: https://github.com/samuel-watson/glmmr/issues
+URL: https://github.com/samuel-watson/glmmrOptim
+BugReports: https://github.com/samuel-watson/glmmrOptim/issues
 Suggests: 
     testthat,
     CVXR
