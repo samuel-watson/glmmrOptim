@@ -2,10 +2,10 @@
 
 # glmmrOptim
 R package for approximate optimal experimental designs using generalised linear mixed models (GLMM) and combinatorial optimisation methods,
-built on the [glmmrBase](https://github.com/samuel-watson/glmmrBase) package.
+built on the [glmmrBase](https://github.com/samuel-watson/glmmrBase) package. A discussion of the methods in this package can be found in [Watson et al (2022)](https://arxiv.org/abs/2207.09183).
 
 ## Model specification
-For model specification see readme of [glmmrBase](https://github.com/samuel-watson/glmmrBase). The `glmmrMCML` package adds the `DesignSpace` class. An instance 
+For model specification see readme of [glmmrBase](https://github.com/samuel-watson/glmmrBase). The `glmmrOptim` package adds the `DesignSpace` class. An instance 
 of a `DesignSpace` object takes one or more `Model` objects, where each object specifies a particular design. Each object should be a complete enumeration of all
 possible observations. Observations can be nested within "experimental conditions", which are immutable collections of observations, 
 for example, we may wish to choose $m$ of $n$ possible clusters of observations. Often the experimental conditions will comprise only a single observation.
