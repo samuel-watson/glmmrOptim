@@ -436,24 +436,25 @@ each condition will be reported below."))
                        }
                        
                        # #for debugging
-                       # args1 <<- list(idx_in = idx_in, 
-                       #               n=m,
-                       #               C_list = C_list, 
-                       #               X_list = X_list,
-                       #               Z_list = Z_list,
-                       #               D_list = D_list,
-                       #               w_diag = w_diag,
-                       #               max_obs = max_obs,
-                       #               any_fix = 0,
-                       #               nfix = N+10,
-                       #               V0_list = V0,
-                       #               weights = weights, 
-                       #               exp_cond = expcond.id,
-                       #               type = algo-1,
-                       #               rd_mode=1,
-                       #               trace=verbose,
-                       #               uncorr=uncorr,
-                       #               bayes=bayes)
+                       rowhash <<- row.hash
+                       args1 <<- list(idx_in = idx_in,
+                                     n=m,
+                                     C_list = C_list,
+                                     X_list = X_list,
+                                     Z_list = Z_list,
+                                     D_list = D_list,
+                                     w_diag = w_diag,
+                                     max_obs = max_obs,
+                                     any_fix = 0,
+                                     nfix = N+10,
+                                     V0_list = V0,
+                                     weights = weights,
+                                     exp_cond = expcond.id,
+                                     type = algo-1,
+                                     rd_mode=1,
+                                     trace=verbose,
+                                     uncorr=uncorr,
+                                     bayes=bayes)
                        # stop("testing")
                        out_list <- GradRobustStep(idx_in = idx_in, 
                                                   n=m,
@@ -471,9 +472,10 @@ each condition will be reported below."))
                                                   type = algo-1,
                                                   rd_mode=1,
                                                   trace=verbose,
-                                                  uncorr=uncorr,
+                                                  uncorr=FALSE,
                                                   bayes=bayes)
                        idx_out <- drop(out_list[["idx_in"]] )
+                       idx_out <<- idx_out
                        idx_out_exp <- sort(idx_out)
                        rows_in <- c()
                        for(i in 1:length(idx_out_exp)){
@@ -481,7 +483,7 @@ each condition will be reported below."))
                          if(length(uni.hash)==1){
                            idx_out_exp[i] <- uni.hash
                          } else {
-                           idx_out_exp[i] <- uni.hash[!uni.hash %in% idx_out_exp][1]
+                           idx_out_exp[i] <- uni.hash[!uni.hash %in% idx_out_exp[1:(i-1)]][1]
                          }
                          rows_in <- c(rows_in, which(expcond == idx_out_exp[i]))
                        }
