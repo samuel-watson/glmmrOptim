@@ -1,4 +1,4 @@
-#include "../inst/include/glmmroptim.h"
+#include "../inst/include/glmmrOptim.h"
 
 // [[Rcpp::depends(RcppEigen)]]
 
