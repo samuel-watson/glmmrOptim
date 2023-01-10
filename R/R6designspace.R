@@ -41,24 +41,19 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' @examples
                    #' df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
                    #' df$int <- df$int - 1
-                   #' mf1 <- MeanFunction$new(formula = ~ int + factor(t) - 1,
-                   #'                         data=df,
-                   #'                         parameters = rep(0,4),
-                   #'                         family = gaussian())
-                   #' cov1 <- Covariance$new(data = df,
-                   #'                        formula = ~ (1|gr(cl)) + (1|gr(cl*t)),
-                   #'                        parameters = c(0.25,0.1))
-                   #' des <- Model$new(covariance = cov1,
-                   #'                   mean.function = mf1,
-                   #'                   var_par = 1)
+                   #' des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl*t)),
+                   #'                                    parameters = c(0.25,0.1)),
+                   #'                  mean = list(formula = ~ int + factor(t) - 1,
+                   #'                              parameters = rep(0,4)),
+                   #'                  data=df,
+                   #'                  family=gaussian(),
+                   #'                  var_par = 1)
                    #' ds <- DesignSpace$new(des)
                    #' #add another design
-                   #' cov2 <- Covariance$new(data = df,
+                   #' des2 <- des$clone(deep=TRUE)
+                   #' des2$covariance <- Covariance$new(data = df,
                    #'                        formula = ~ (1|gr(cl)*ar1(t)),
                    #'                        parameters = c(0.25,0.8))
-                   #' des2 <- Model$new(covariance = cov2,
-                   #'                   mean.function = mf1,
-                   #'                   var_par = 1)
                    #' ds$add(des2)
                    #' #report the size of the design
                    #' ds$n()
@@ -205,20 +200,13 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' df <- nelder(~(cl(6)*t(5)) > ind(5))
                    #' df$int <- 0
                    #' df[df$t >= df$cl, 'int'] <- 1
-                   #' mf1 <- MeanFunction$new(
-                   #'   formula = ~ factor(t) + int - 1,
-                   #'   data=df,
-                   #'   parameters = c(rep(0,5),0.6),
-                   #'   family =gaussian()
-                   #' )
-                   #' cov1 <- Covariance$new(
-                   #'   data = df,
-                   #'   formula = ~ (1|gr(cl)),
-                   #'   parameters = c(0.25)
-                   #' )
                    #' des <- Model$new(
-                   #'   covariance = cov1,
-                   #'   mean.function = mf1,
+                   #'   covariance = list(formula = ~ (1|gr(cl)),
+                   #'                     parameters = c(0.25)),
+                   #'   mean = list(formula = ~ factor(t) + int - 1, 
+                   #'               parameters = c(rep(0,5),0.6)),
+                   #'   data=df,
+                   #'   family=gaussian(),
                    #'   var_par = 1
                    #' )
                    #' ds <- DesignSpace$new(des)
@@ -229,7 +217,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' #let the experimental condition be the cluster
                    #' # these experimental conditions are independent of one another
                    #' ds <- DesignSpace$new(des,experimental_condition = df$cl)
-                   #' #now find the optimal 4 clusters to include
+                   #' # now find the optimal 4 clusters to include
                    #' # approximately, finding the weights for each condition
                    #' # note it will ignore m and just return the weights
                    #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
@@ -237,15 +225,11 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)),force_hill = TRUE)
                    #' 
                    #' #robust optimisation using two designs
-                   #'   cov2 <- Covariance$new(
+                   #' des2 <- des$clone(deep=TRUE)
+                   #' des2$covariance <- Covariance$new(
                    #'   data = df,
                    #'   formula = ~ (1|gr(cl)*ar1(t)),
                    #'   parameters = c(0.25,0.8)
-                   #' )
-                   #' des2 <- Model$new(
-                   #'   covariance = cov1,
-                   #'   mean.function = mf1,
-                   #'   var_par = 1
                    #' )
                    #' ds <- DesignSpace$new(des,des2)
                    #' #weighted average
