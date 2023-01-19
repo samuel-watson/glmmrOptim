@@ -3,6 +3,9 @@
 \name{DesignSpace}
 \alias{DesignSpace}
 \title{A GLMM Design Space}
+\value{
+An environment that is `DesignSpace` class object
+}
 \description{
 A GLMM Design Space
 

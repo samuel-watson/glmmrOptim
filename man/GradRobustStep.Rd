@@ -15,10 +15,9 @@ GradRobustStep(
   max_obs,
   weights,
   exp_cond,
-  nfix,
+  nmax,
   V0_list,
   type,
-  any_fix = 0L,
   robust_log = FALSE,
   trace = TRUE,
   uncorr = FALSE,
@@ -46,13 +45,9 @@ GradRobustStep(
 
 \item{exp_cond}{Vector specifying the experimental condition index of each observation}
 
-\item{nfix}{Vector listing the experimental condition indexes that are fixed in the design}
-
 \item{V0_list}{List of prior covariance matrices for the model parameters}
 
 \item{type}{Integer. 0 = local search algorithm. 1 = local+greedy+local. 2 = local+greedy. 3 = greedy+local}
-
-\item{any_fix}{Integer. 0 = no experimental conditions are fixed, 1 = some experimental conditions are fixed}
 
 \item{trace}{Logical indicating whether to provide detailed output}
 
@@ -60,6 +55,10 @@ GradRobustStep(
 
 \item{bayes}{Logical indicating whether to use a Bayesian model with prior distributions on model parameters (TRUE) or a 
 likelihood based model (FALSE)}
+
+\item{nfix}{Vector listing the experimental condition indexes that are fixed in the design}
+
+\item{any_fix}{Integer. 0 = no experimental conditions are fixed, 1 = some experimental conditions are fixed}
 
 \item{rd_mode}{Integer. Robust objective function, 1=weighted average, 2=minimax}
 }

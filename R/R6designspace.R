@@ -10,6 +10,7 @@
 #' A `DesignSpace` object is intialised using one or more \link[glmmrBase]{Model} objects. Design objects can be added or removed from the collection. 
 #' All designs must have the same number of rows in their design matrices (X and Z) and the same number of experimental conditions. 
 #' The DesignSpace functions can modify the linked design objects.
+#' @return An environment that is `DesignSpace` class object
 DesignSpace <- R6::R6Class("DesignSpace",
                  public = list(
                    #' @field weights A vector denoting the prior weighting of each Design in the design space. Required if robust optimisation is used based on a 
