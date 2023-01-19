@@ -25,7 +25,7 @@
 #' likelihood based model (FALSE)
 #' @return A list containing: a vector of experimental condition indexes in the optimal design, the variance of the optimal design,
 #'  the number of function calls and matrix operations, and an indicator for whether a Bayesian model was used.
-GradRobustStep <- function(idx_in, n, C_list, X_list, Z_list, D_list, w_diag, max_obs, weights, exp_cond, nfix, V0_list, any_fix = 0L, type = 0L, rd_mode = 1L, trace = TRUE, uncorr = FALSE, bayes = FALSE) {
-    .Call(`_glmmrOptim_GradRobustStep`, idx_in, n, C_list, X_list, Z_list, D_list, w_diag, max_obs, weights, exp_cond, nfix, V0_list, any_fix, type, rd_mode, trace, uncorr, bayes)
+GradRobustStep <- function(idx_in, n, C_list, X_list, Z_list, D_list, w_diag, max_obs, weights, exp_cond, nmax, V0_list, type, robust_log = FALSE, trace = TRUE, uncorr = FALSE, bayes = FALSE) {
+    .Call(`_glmmrOptim_GradRobustStep`, idx_in, n, C_list, X_list, Z_list, D_list, w_diag, max_obs, weights, exp_cond, nmax, V0_list, type, robust_log, trace, uncorr, bayes)
 }
 

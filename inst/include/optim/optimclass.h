@@ -36,7 +36,7 @@ private:
   Eigen::ArrayXi max_obs_;
   Eigen::ArrayXi curr_obs_;
   const int nlist_;
-  int any_fix_;
+  //int any_fix_; NOT USED CURRENTLY 
   int n_;
   int k_;
   int nmax_;
@@ -64,8 +64,8 @@ public:
   glmmr::MatrixField<Eigen::MatrixXd> M_list_;
   glmmr::MatrixField<Eigen::MatrixXd> M_list_sub_;
   glmmr::MatrixField<Eigen::MatrixXd> V0_list_;
-  const Eigen::ArrayXi nfix_; //the indexes of the experimental conditions to keep
-  const int rd_mode_; // robust designs mode: 1 == weighted, 2 == minimax.
+  // const Eigen::ArrayXi nfix_; //the indexes of the experimental conditions to keep NOT USED CURRENTLY
+  const bool robust_log_; // robust designs mode: true = log sum, false = sum
   
   bool trace_;
   bool uncorr_;
@@ -82,10 +82,9 @@ public:
               Eigen::ArrayXi max_obs,
               Eigen::VectorXd weights,
               Eigen::ArrayXi exp_cond,
-              int any_fix,
-              Eigen::ArrayXi nfix,
+              int nmax,
               const glmmr::MatrixField<Eigen::MatrixXd> &V0_list,
-              int rd_mode = 0, 
+              bool robust_log = false, 
               bool trace=false,
               bool uncorr=false,
               bool bayes = false) :
@@ -98,10 +97,10 @@ public:
   max_obs_(max_obs),
   curr_obs_(max_obs.size()),//set to zero
   nlist_(weights_.size()),
-  any_fix_(any_fix),
+  //any_fix_(any_fix),NOT USED
   n_(n), 
   k_(max_obs.size()),
-  nmax_(2*ceil(X_all_list_.rows(0)/k_)*n_),
+  nmax_(nmax),
   p_(nlist_), //set to zero
   q_(nlist_), //set to zero
   idx_in_(idx_in),
@@ -123,8 +122,8 @@ public:
   M_list_(),
   M_list_sub_(),
   V0_list_(V0_list),
-  nfix_(nfix), 
-  rd_mode_(rd_mode), 
+  // nfix_(nfix), //not currently used - eventually will specify a minimum 
+  robust_log_(robust_log), 
   trace_(trace),
   uncorr_(uncorr),
   bayes_(bayes){
@@ -148,7 +147,6 @@ public:
     count_exp_cond_rm_ = Eigen::ArrayXi::Zero(nmax_);
     A_list_ = Eigen::MatrixXd::Zero(nmax_*nlist_,nmax_);
     rm1A_list_ = Eigen::MatrixXd::Zero(nmax_*nlist_,nmax_);
-
     
     std::sort(idx_in_.data(),idx_in_.data()+idx_in_.size());
     for(int i=0; i<idx_in_.size(); i++){
@@ -157,7 +155,6 @@ public:
 
     idx_in_sub_ = idx_in_;
     rows_in_design_ = Eigen::ArrayXi::LinSpaced(nmax_,0,nmax_-1);
-
     Eigen::VectorXd vals(nlist_);
     int rowcount;
     for(int j=0; j<nlist_;j++){
@@ -177,15 +174,16 @@ public:
           rowcount++;
         }
       }
-       if(j==0)r_in_design_ = rowcount;
-       Eigen::MatrixXd Dt = D_list_(j);
-       Eigen::MatrixXd tmp = Z.topRows(rowcount)*Dt*Z.topRows(rowcount).transpose();
-       Eigen::MatrixXd I = Eigen::MatrixXd::Identity(tmp.rows(),tmp.cols());
-       tmp.diagonal() += w_diag.head(rowcount);
-       Eigen::MatrixXd M = X.topRows(rowcount).transpose() * tmp.llt().solve(I) * X.topRows(rowcount);
-       
-       M_list_.add(M);
-       M_list_sub_.add(M);
+      if(j==0)r_in_design_ = rowcount;
+      Eigen::MatrixXd Dt = D_list_(j);
+      Eigen::MatrixXd tmp = Z.topRows(rowcount)*Dt*Z.topRows(rowcount).transpose();
+      Eigen::MatrixXd I = Eigen::MatrixXd::Identity(tmp.rows(),tmp.cols());
+      tmp.diagonal() += w_diag.head(rowcount);
+      Eigen::MatrixXd M = X.topRows(rowcount).transpose() * tmp.llt().solve(I) * X.topRows(rowcount);
+     
+      M_list_.add(M);
+      M_list_sub_.add(M);
+    
       if(uncorr_){
         vals(j) = bayes_ ? glmmr::maths::c_obj_fun( M_list_(j) + V0_list_(j), C_list_(j)) : glmmr::maths::c_obj_fun( M_list_(j), C_list_(j));
       } else {
@@ -195,16 +193,18 @@ public:
       }
 
     }
-    new_val_ = rd_mode_ == 1 ? vals.transpose()*weights_ : vals.maxCoeff();
-    if(trace_)Rcpp::Rcout << "\nval: " << new_val_;
+   
+    new_val_ = robust_log_ ? vals.log().transpose()*weights_ : vals.transpose()*weights_;
+    if(trace_)Rcpp::Rcout << "\nStarting val: " << new_val_;
   }
   
   
   // LOCAL SEARCH ALGORITHM
   void local_search(){
-    if (trace_) Rcpp::Rcout << "\nLocal search";
+    if (trace_) Rcpp::Rcout << "\nLOCAL SEARCH";
     int i = 0;
     double diff = -1.0;
+    double tmp;
     
     while(diff < 0){
       i++;
@@ -225,10 +225,10 @@ public:
       
       if(diff < 0){
         if(uncorr_){
-          rm_obs_uncor(1+(int)minrow,true);
+          tmp = rm_obs_uncor(1+(int)minrow,true);
           new_val_ = add_obs_uncor(1+(int)mincol,true,true);
         } else {
-          rm_obs(1+(int)minrow,true);
+          tmp = rm_obs(1+(int)minrow,true);
           new_val_ = add_obs(1+(int)mincol,true,true);
         }
       } else {
@@ -241,8 +241,8 @@ public:
   void greedy_search(){
     // step 1: find optimal smallest design
     int i = 0;
-    if (trace_) Rcpp::Rcout << "\nidx: " << idx_in_.transpose();
-    if (trace_) Rcpp::Rcout << "\nGreedy search: " << n_;
+    if (trace_) Rcpp::Rcout << "\nStarting conditions: " << idx_in_.transpose();
+    if (trace_) Rcpp::Rcout << "\nGREEDY SEARCH for design of size " << n_;
     int idxcount = idx_in_.size();
     while(idxcount < n_){
       i++;
@@ -260,6 +260,46 @@ public:
       }
     }
     if (trace_) Rcpp::Rcout << "\nFINISHED GREEDY SEARCH";
+  }
+  
+  void reverse_greedy_search(){
+    // start from the whole design space and then successively remove observations
+    if (trace_) Rcpp::Rcout << "\nREVERSE GREEDY SEARCH for design of size " << n_;
+    int i = 0;
+    int idxcount = idx_in_.size();
+    //Rcpp::Rcout << "\nIdx: " << idx_in_.transpose();
+    Eigen::ArrayXd val_rm(k_);
+    
+    
+    //Rcpp::Rcout << "\nidx: \n" << idx_in_.transpose();
+    
+    while(idxcount > n_){
+      i++;
+      val_ = new_val_;
+      if (trace_) Rcpp::Rcout << "\nIter " << i << " size: " << idxcount << " Current value: " << val_ ;
+      for(int j = 1; j< k_+1; j++){
+        if((idx_in_ == j).any()){
+          if(uncorr_){
+            val_rm(j-1) = rm_obs_uncor(j,false,false,true);
+          } else {
+            val_rm(j-1) = rm_obs(j,false,false,true);
+          }
+        } else {
+          val_rm(j-1) = 10000;
+        }
+      }
+      //Rcpp::Rcout << "\nval_rm: \n" << val_rm.transpose();
+      Eigen::Index swap_sort;
+      double min = val_rm.minCoeff(&swap_sort);
+      if (trace_) Rcpp::Rcout << " removing " << swap_sort+1;
+      if(uncorr_){
+        new_val_ = rm_obs_uncor((int)swap_sort+1,true,true,true);
+      } else {
+        new_val_ = rm_obs((int)swap_sort+1,true,true,true);
+      }
+      idxcount--;
+    }
+    if (trace_) Rcpp::Rcout << "\nFINISHED REVERSE GREEDY SEARCH";
   }
   
 private:
@@ -292,12 +332,16 @@ private:
   }
   
   // remove observation
-  void rm_obs(int outobs,
-              bool keep = false){
+  // 
+  double rm_obs(int outobs,
+                bool keep = false,
+                bool keep_mat = false,
+                bool rtn_val = false){
     Eigen::ArrayXi rm_cond = glmmr::Eigen_ext::find(idx_in_,outobs);
     Eigen::ArrayXi rowstorm = get_rows(rm_cond(0));
     idx_in_rm_ = glmmr::algo::uvec_minus(idx_in_,rm_cond(0));
     Eigen::ArrayXi idxexist = get_all_rows(idx_in_rm_);
+    Eigen::VectorXd vals = Eigen::VectorXd::Constant(nlist_,10000.0);
     for (int idx = 0; idx < nlist_; ++idx) {
       matops_++;
       Eigen::MatrixXd A1 = A_list_.block(idx*nmax_,0,r_in_design_,r_in_design_);
@@ -306,7 +350,15 @@ private:
       rm1A_list_.block(idx*nmax_,0,r_in_rm_,r_in_rm_) = rm1A;
       int p = X_all_list_.cols(idx);
       Eigen::MatrixXd X = glmmr::Eigen_ext::mat_indexing(X_all_list_(idx),idxexist,Eigen::ArrayXi::LinSpaced(p,0,p-1));
-      M_list_sub_.replace(idx,X.transpose()*rm1A*X);
+      Eigen::MatrixXd M = X.transpose()*rm1A*X;
+      M_list_sub_.replace(idx,M);
+      if(rtn_val)vals(idx) = bayes_ ? glmmr::maths::c_obj_fun( M+V0_list_(idx), C_list_(idx)) : glmmr::maths::c_obj_fun( M, C_list_(idx));
+      
+      if(keep_mat){
+        if(idx==0)r_in_design_ = rm1A.rows();
+        M_list_.replace(idx,M);
+        A_list_.block(idx*nmax_,0,r_in_design_,r_in_design_) = rm1A;
+      } 
     }
     
     count_exp_cond_rm_.head(rm_cond(0)) = count_exp_cond_.head(rm_cond(0));
@@ -319,12 +371,22 @@ private:
     if(keep){
       curr_obs_(outobs-1)--;
     }
+    
+    if(keep_mat){
+      idx_in_ = idx_in_rm_;
+      count_exp_cond_.segment(0,idx_in_.size()-1) = count_exp_cond_rm_.segment(0,idx_in_.size()-1);
+    }
+    double rtn = robust_log_ ? vals.log().transpose()*weights_ : vals.transpose()*weights_;
+    return rtn;
   }
   
-  void rm_obs_uncor(int outobs,
-                    bool keep = false){
+  double rm_obs_uncor(int outobs,
+                    bool keep = false,
+                    bool keep_mat = false,
+                    bool rtn_val = false){
     Eigen::ArrayXi rm_cond = glmmr::Eigen_ext::find(idx_in_,outobs);
     Eigen::ArrayXi rowstorm = get_rows(rm_cond(0));
+    Eigen::VectorXd vals = Eigen::VectorXd::Constant(nlist_,10000.0); 
     
     for(int j=0; j<nlist_;j++){
       Eigen::MatrixXd X = Eigen::MatrixXd::Zero(rowstorm.size(),p_(j));
@@ -344,6 +406,12 @@ private:
       tmp = tmp.llt().solve(I);
       M.noalias() -= X.transpose()*tmp*X;
       M_list_sub_.replace(j,M);
+      if(rtn_val)vals(j) = bayes_ ? glmmr::maths::c_obj_fun( M+V0_list_(j), C_list_(j)) : glmmr::maths::c_obj_fun( M, C_list_(j));
+      
+      
+      if(keep_mat){
+        M_list_.replace(j,M);
+      }
     }
     idx_in_rm_ = glmmr::algo::uvec_minus(idx_in_,rm_cond(0));
     count_exp_cond_rm_.head(rm_cond(0)) = count_exp_cond_.head(rm_cond(0));
@@ -356,9 +424,14 @@ private:
     if(keep){
       curr_obs_(outobs-1)--;
     }
+    
+    if(keep_mat){
+      idx_in_ = idx_in_rm_;
+      count_exp_cond_.segment(0,idx_in_.size()-1) = count_exp_cond_rm_.segment(0,idx_in_.size()-1);
+    }
+    double rtn = robust_log_ ? vals.log().transpose()*weights_ : vals.transpose()*weights_;
+    return rtn;
   }
-  
-  
   
   // add a new observation
   double add_obs(int inobs,
@@ -425,7 +498,7 @@ private:
         count_exp_cond_(idx_in_.size()-1) = n_to_add;
       }
     }
-    double rtn = rd_mode_ == 1 ? vals.transpose()*weights_ : vals.maxCoeff();
+    double rtn = robust_log_ ? vals.log().transpose()*weights_ : vals.transpose()*weights_;
     if(rtn < 10000){
       return rtn;
     } else {
@@ -479,7 +552,7 @@ private:
         count_exp_cond_(idx_in_.size()-1) = rowstoadd.size();
       }
     }
-    double rtn = rd_mode_ == 1 ? vals.transpose()*weights_ : vals.maxCoeff();
+    double rtn = robust_log_ ? vals.log().transpose()*weights_ : vals.transpose()*weights_;
     if(rtn < 10000){
       return rtn;
     } else {
@@ -489,11 +562,12 @@ private:
   
   Eigen::ArrayXd eval(bool userm = true, int obs = 0){
     Eigen::ArrayXd val_in_mat = Eigen::ArrayXd::Constant(k_,10000);
+    double tmp;
     if(userm){
       if(uncorr_){
-        rm_obs_uncor(obs);
+        tmp = rm_obs_uncor(obs);
       } else {
-        rm_obs(obs);
+        tmp = rm_obs(obs);
       }
 
 #pragma omp parallel for

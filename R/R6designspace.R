@@ -86,7 +86,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                        if(length(weights)!=length(list(...)))stop("weights not same length as designs")
                        self$weights <- weights
                      } else {
-                       message("weights not provided, assigning equal weighting. weights can be changed manually in self$weights")
+                       if(length(list(...))>1)message("weights not provided, assigning equal weighting. weights can be changed manually in self$weights")
                        self$weights <- rep(1/length(list(...)),length(list(...)))
                      }
                      
@@ -152,24 +152,31 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' Algorithms to identify an approximate c-optimal design of size m within the design space.
                    #' @details 
                    #' **Approximate c-Optimal designs**
-                   #' The algorithm identifies a c-optimal design of size m from the design space with N designs each with n observations. The objective
+                   #' The function returns approximate c-optimal design(s) of size m from the design space with N experimental conditions. The objective
                    #' function is
                    #' 
                    #' \deqn{C^TM^{-1}C}
                    #' 
                    #' where M is the information matrix and C is a vector. Typically C will be a vector of zeros with a single 1 in the position of the
-                   #' parameter of interest. For example, if the columns of X in the design are an interept, the treatment indicator, and then time 
+                   #' parameter of interest. For example, if the columns of X in the design are an interdept, the treatment indicator, and then time 
                    #' period indicators, the vector C may be `c(0,1,0,0,...)`, such that the objective function is the variance of that parameter. 
                    #' If there are multiple designs in the design space, the C vectors do 
-                   #' not have to be the same as the columns of X in each design might differ, in which case a list of vectors can be provided.
+                   #' not have to be the same as the columns of X in each design might differ.
                    #' 
-                   #' If the experimental conditions are correlated with one another, then a hill climbing algorithm is used to find the optimal 
-                   #' design by using the convexity of the objective function to "climb the hill" towards the optimal design. 
+                   #' If the experimental conditions are correlated with one another, then one of three combinatorial algorithms can be used, see 
+                   #' Watson and Pan, 2022 <arXiv:2207.09183>. The algorithms are: (i) local search, which starts from a random design of size m and then
+                   #' makes the best swap between an experimental condition in and out of the design until no variance improving swap can be made; 
+                   #' (ii) greedy search, which starts from a design of size p << n and then sequentially adds the best experimental condition until 
+                   #' it generates a design of size m; (iii) reverse greedy search, which starts from the complete set of N experimental conditions and 
+                   #' sequentially removes the worst experimental condition until it generates a design of size m. Note that only the local search has
+                   #' provable bounds on the solution.
+                   #'  
                    #' If the experimental conditional are uncorrelated (but there is correlation between observations within the same
-                   #' experimental condition) then optionally a fast algorithm can be used to approximate the optimal design using a second-order 
-                   #' cone program (see Sangol 2015 and van Dette). The approximate algorithm will return weights for each unique experimental condition representing
+                   #' experimental condition) then optionally an alternative algorithm can be used to approximate the optimal design using a second-order 
+                   #' cone program (see Sangol, 2015 <doi:10.1016/j.jspi.2010.11.031> and Holland-Letz et al 2011 <doi:10.1111/j.1467-9868.2010.00757.x>). 
+                   #' The approximate algorithm will return weights in [0,1] for each unique experimental condition representing
                    #' the "proportion of effort" to spend on each design condition. There are different ways to translate these weights into integer
-                   #' values. Use of the approximate optimal design algorithm can be disabled used `force_hill=TRUE`
+                   #' values, which are returned see \link[glmmrOptim]{apportion}. Use of the approximate optimal design algorithm can be disabled used `use_combin=TRUE`
                    #' 
                    #' In some cases the optimal design will not be full rank with respect to the design matrix X of the design space. This will result
                    #' in a non-positive definite information matrix, and an error. The program will indicate which columns of X are likely "empty" in the optimal
@@ -177,10 +184,10 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' specified columns and linked observations before starting the algorithm. 
                    #' 
                    #' The algorithm will also identify robust optimal designs if there are multiple designs in the design space. 
-                   #' There are two options for robust optimisation. First, a weighted average of objective functions, where the weights are specified 
-                   #' by the `weights` field in the design space (`robust_function = "weighted"`). The weights may represent the prior probability or plausibility of each design, 
-                   #' for example. Second, a minimax approach can be used, where the function identifies the design that minimises the maximum objective
-                   #' function across all designs (`robust_function = "minimax"`).
+                   #' There are two options for robust optimisation. Both involve a weighted combination of the value of the function from each design, where the weights are specified 
+                   #' by the `weights` field in the design space. The weights represent the prior probability or plausibility of each design. 
+                   #' The weighted sum is either a sum of the absolute value of the c-optimal criterion or its log (e.g. see Dette, 1993 <doi:10.1214/aos/1176349149>).
+                   #' 
                    #' @param m A positive integer specifying the number of experimental conditions to include.
                    #' @param C Either a vector or a list of vectors of the same length as the number of designs, see Details.
                    #' @param V0 Optional. If a Bayesian c-optimality problem then this should be a list of prior covariance matrices for the model parameters
@@ -190,12 +197,19 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' conditions and columns that are not part of the optimal design. Irreversible, so that these observations will be lost from the 
                    #' linked design objects. Defaults to FALSE.
                    #' @param verbose Logical indicating whether to reported detailed output on the progress of the algorithm. Default is TRUE.
-                   #' @param algo character string, either "local" for local search algorithm, or "greedy" for greedy search
-                   #' @param force_hill Logical. If the experimental conditions are uncorrelated, if this option is TRUE then the hill climbing 
+                   #' @param algo A vector of integers indicating the algorithm(s) to use. 1 = local search, 2 = greedy search, 3 = reverse greedy search.
+                   #' Declaring `algo = 1` for example will use the local search. Providing a vector such as `c(3,1)` will execute the algorithms in order,
+                   #' so this would run a reverse greedy search followed by a local search. Note that many combinations will be redundant. For example, running
+                   #' a greedy search after a local search will not have any effect.
+                   #' @param use_combin Logical. If the experimental conditions are uncorrelated, if this option is TRUE then the hill climbing 
                    #' algorithm will be used, otherwise if it is FALSE, then a fast approximate alternative will be used. See Details
+                   #' @param robust_log Logical. If TRUE and there are multiple designs in the design space then the robust criterion will be a sum of the log
+                   #' of the c-optimality criterion weighted by the study weights, and if FALSE then it will be a weighted sum of the absolute value.
                    #' @param p Positive integer specifying the size of the starting design for the greedy algorithm
-                   #' @return A vector indicating the identifiers of the experimental conditions in the optimal design, or a vector indicating the
-                   #' weights if the approximate algorithm is used. Optionally the linked designs are also modified (see option `keep`).
+                   #' @return A named list. If using the weighting method then the list contains the optimal experimental weights and a 
+                   #' list of exact designs of size `m`, see \link[glmmrOptim]{apportion}. If using a combinatorial algorithm then 
+                   #' the list contains the rows in the optimal design, the indexes of the experimental conditions in the optimal design,
+                   #' the variance from this design, and the total number of function evaluations. Optionally the linked designs are also modified (see option `keep`).
                    #' @examples
                    #' df <- nelder(~(cl(6)*t(5)) > ind(5))
                    #' df$int <- 0
@@ -222,7 +236,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' # note it will ignore m and just return the weights
                    #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
                    #' # or use the exact algorithm
-                   #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)),force_hill = TRUE)
+                   #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE)
                    #' 
                    #' #robust optimisation using two designs
                    #' des2 <- des$clone(deep=TRUE)
@@ -240,14 +254,15 @@ DesignSpace <- R6::R6Class("DesignSpace",
                                       rm_cols=NULL,
                                       keep=FALSE,
                                       verbose=TRUE,
-                                      algo = 1,
-                                      force_hill=FALSE,
+                                      algo = c(1),
+                                      use_combin=FALSE,
+                                      robust_log = FALSE,
                                       p){
                      if(keep&verbose)message("linked design objects will be overwritten with the new design")
                      if(length(C)!=self$n()[[1]])stop("C not equal to number of designs")
                      if(!is.null(V0) & length(V0)!=self$n()[[1]])stop("V0 not equal to number of designs")
                      ## add checks
-                     
+                     if(any(!algo%in%1:3))stop("Algorithm(s) must be a combination of 1, 2, and 3")
                      # dispatch to correct algorithm
                      # check if the experimental conditions are correlated or not
                      #loop through each sigma
@@ -264,7 +279,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                      }
                      ## need to detect if the experimental conditions are duplicated
                      ## can update this but currently only provides a warning to the user
-                     if(uncorr&!force_hill){
+                     if(uncorr&!use_combin){
                        datahashes <- c()
                        for(j in unique_exp_cond){
                          datalist <- list()
@@ -281,7 +296,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                          datahashes <- match(datahashes,unique_hash)
                          message(paste0("Duplicated experimental conditions in the design space, ",n_unique_hash," unique 
 experimental conditions, which are uncorrelated. 
-force_hill=FALSE so weights will be calculated for each experimental condition separately. Sum of weights for
+use_combin=FALSE so weights will be calculated for each experimental condition separately. Sum of weights for
 each condition will be reported below."))
                        }
                      }
@@ -295,20 +310,23 @@ each condition will be reported below."))
                        C_list <- C
                      }
                      
-                     if(verbose&uncorr&!force_hill)message("Experimental conditions uncorrelated, using second-order cone program")
-                     if(verbose&uncorr&force_hill)message("Experimental conditions uncorrelated, but using hill climbing algorithm")
+                     if(verbose&uncorr&!use_combin)message("Experimental conditions uncorrelated, using second-order cone program")
+                     if(verbose&uncorr&use_combin)message("Experimental conditions uncorrelated, but using hill climbing algorithm")
                      if(verbose&!uncorr)message("Experimental conditions correlated, using combinatorial search algorithms")
                      
-                     if(uncorr&!force_hill){
+                     if(uncorr&!use_combin){
                        # this returns the experimental designs to keep
+                       if(self$n()[1] > 1)stop("An approximate weighting method is not currently available with a robust criterion. Please use combinatorial algorithms.")
                        idx_out <- private$socp_roptimal(C_list,m)
                        idx_out <- drop(idx_out)
-                       if(verbose)cat("Weights for each experimental condition in the optimal design: ", idx_out)
+                       if(verbose)cat("Weights for each experimental condition in the optimal design:\n", idx_out)
                        if(any(duplicated(datahashes))){
                          agg_weights <- aggregate(idx_out,list(datahashes),sum)
-                         cat("\nSum of weights for unique experimental conditions: ",agg_weights$x)
+                         cat("\nSum of weights for unique experimental conditions:\n",agg_weights$x)
                          idx_out <- list(weights = idx_out, unique_weights = agg_weights$x)
                        }
+                       outlist <- list(weights = idx_out,
+                                       designs = apportion(m,idx_out))
                        return(invisible(idx_out))
                      } else {
                        #initialise from random starting index
@@ -391,10 +409,9 @@ each condition will be reported below."))
                        max_obs <- unname(table(row.hash))
                        expcond.id <- as.numeric(factor(expcond[idx.nodup],levels = unique(expcond[idx.nodup])))
                        
-                       # row.hash <<- row.hash
-                       if(algo == 1){
+                       if(algo[1]==1){
                          idx_in <- sort(sample(row.hash,m,replace=FALSE))
-                       } else if(algo %in% 2:4){
+                       } else if(algo[1]==2){
                          # find a size p design
                          ispd <- FALSE
                          #n <- nrow(X_list[[1]])
@@ -404,8 +421,11 @@ each condition will be reported below."))
                            cM <- suppressWarnings(tryCatch(chol(M),error=function(e)NULL))
                            if(!is.null(cM))ispd <- TRUE
                          }
+                       } else if(algo[1]==3){
+                         idx_in <- row.hash
+                         
                        }
-                       
+                         
                        bayes <- FALSE
                        if(!is.null(V0)){
                          bayes <- TRUE
@@ -420,26 +440,27 @@ each condition will be reported below."))
                        }
                        
                        # #for debugging
-                       rowhash <<- row.hash
-                       args1 <<- list(idx_in = idx_in,
-                                     n=m,
-                                     C_list = C_list,
-                                     X_list = X_list,
-                                     Z_list = Z_list,
-                                     D_list = D_list,
-                                     w_diag = w_diag,
-                                     max_obs = max_obs,
-                                     any_fix = 0,
-                                     nfix = N+10,
-                                     V0_list = V0,
-                                     weights = weights,
-                                     exp_cond = expcond.id,
-                                     type = algo-1,
-                                     rd_mode=1,
-                                     trace=verbose,
-                                     uncorr=uncorr,
-                                     bayes=bayes)
+                       # idx_in <<- idx_in
+                       # rowhash <<- row.hash
+                       # args1 <<- list(idx_in = idx_in,
+                       #               n=m,
+                       #               C_list = C_list,
+                       #               X_list = X_list,
+                       #               Z_list = Z_list,
+                       #               D_list = D_list,
+                       #               w_diag = w_diag,
+                       #               max_obs = max_obs,
+                       #               nmax = N,
+                       #               V0_list = V0,
+                       #               weights = weights,
+                       #               exp_cond = expcond.id,
+                       #               type = algo-1,
+                       #               robust_log = robust_log,
+                       #               trace=verbose,
+                       #               uncorr=uncorr,
+                       #               bayes=bayes)
                        # stop("testing")
+                       
                        out_list <- GradRobustStep(idx_in = idx_in, 
                                                   n=m,
                                                   C_list = C_list, 
@@ -448,18 +469,18 @@ each condition will be reported below."))
                                                   D_list = D_list,
                                                   w_diag = w_diag,
                                                   max_obs = max_obs,
-                                                  any_fix = 0,
-                                                  nfix = N+10,
+                                                  nmax = N+10,
                                                   V0_list = V0,
                                                   weights = weights, 
                                                   exp_cond = expcond.id,
-                                                  type = algo-1,
-                                                  rd_mode=1,
+                                                  type = algo,
+                                                  robust_log = robust_log,
                                                   trace=verbose,
                                                   uncorr=FALSE,
                                                   bayes=bayes)
+                       
                        idx_out <- drop(out_list[["idx_in"]] )
-                       idx_out <<- idx_out
+                       
                        idx_out_exp <- sort(idx_out)
                        rows_in <- c()
                        for(i in 1:length(idx_out_exp)){
@@ -485,7 +506,7 @@ each condition will be reported below."))
                        }
                        
                        #if(verbose)cat("Experimental conditions in the optimal design: ", idx_out_exp$rows)
-                       return(invisible(list(rows = rows_in, exp.cond = idx_out_exp, val = out_list$best_val_vec,
+                       return(invisible(list(rows = sort(rows_in), exp.cond = sort(idx_out_exp), val = out_list$best_val_vec,
                                              func_calls = out_list$func_calls, mat_ops = out_list$mat_ops)))
                      }
                    },

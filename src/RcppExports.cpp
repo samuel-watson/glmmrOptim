@@ -13,8 +13,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // GradRobustStep
-Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in, int n, Rcpp::List C_list, Rcpp::List X_list, Rcpp::List Z_list, Rcpp::List D_list, Eigen::MatrixXd w_diag, Eigen::ArrayXi max_obs, Eigen::VectorXd weights, Eigen::ArrayXi exp_cond, Eigen::ArrayXi nfix, Rcpp::List V0_list, int any_fix, int type, int rd_mode, bool trace, bool uncorr, bool bayes);
-RcppExport SEXP _glmmrOptim_GradRobustStep(SEXP idx_inSEXP, SEXP nSEXP, SEXP C_listSEXP, SEXP X_listSEXP, SEXP Z_listSEXP, SEXP D_listSEXP, SEXP w_diagSEXP, SEXP max_obsSEXP, SEXP weightsSEXP, SEXP exp_condSEXP, SEXP nfixSEXP, SEXP V0_listSEXP, SEXP any_fixSEXP, SEXP typeSEXP, SEXP rd_modeSEXP, SEXP traceSEXP, SEXP uncorrSEXP, SEXP bayesSEXP) {
+Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in, int n, Rcpp::List C_list, Rcpp::List X_list, Rcpp::List Z_list, Rcpp::List D_list, Eigen::MatrixXd w_diag, Eigen::ArrayXi max_obs, Eigen::VectorXd weights, Eigen::ArrayXi exp_cond, int nmax, Rcpp::List V0_list, Eigen::ArrayXi type, bool robust_log, bool trace, bool uncorr, bool bayes);
+RcppExport SEXP _glmmrOptim_GradRobustStep(SEXP idx_inSEXP, SEXP nSEXP, SEXP C_listSEXP, SEXP X_listSEXP, SEXP Z_listSEXP, SEXP D_listSEXP, SEXP w_diagSEXP, SEXP max_obsSEXP, SEXP weightsSEXP, SEXP exp_condSEXP, SEXP nmaxSEXP, SEXP V0_listSEXP, SEXP typeSEXP, SEXP robust_logSEXP, SEXP traceSEXP, SEXP uncorrSEXP, SEXP bayesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -28,21 +28,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Eigen::ArrayXi >::type max_obs(max_obsSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXd >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< Eigen::ArrayXi >::type exp_cond(exp_condSEXP);
-    Rcpp::traits::input_parameter< Eigen::ArrayXi >::type nfix(nfixSEXP);
+    Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type V0_list(V0_listSEXP);
-    Rcpp::traits::input_parameter< int >::type any_fix(any_fixSEXP);
-    Rcpp::traits::input_parameter< int >::type type(typeSEXP);
-    Rcpp::traits::input_parameter< int >::type rd_mode(rd_modeSEXP);
+    Rcpp::traits::input_parameter< Eigen::ArrayXi >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< bool >::type robust_log(robust_logSEXP);
     Rcpp::traits::input_parameter< bool >::type trace(traceSEXP);
     Rcpp::traits::input_parameter< bool >::type uncorr(uncorrSEXP);
     Rcpp::traits::input_parameter< bool >::type bayes(bayesSEXP);
-    rcpp_result_gen = Rcpp::wrap(GradRobustStep(idx_in, n, C_list, X_list, Z_list, D_list, w_diag, max_obs, weights, exp_cond, nfix, V0_list, any_fix, type, rd_mode, trace, uncorr, bayes));
+    rcpp_result_gen = Rcpp::wrap(GradRobustStep(idx_in, n, C_list, X_list, Z_list, D_list, w_diag, max_obs, weights, exp_cond, nmax, V0_list, type, robust_log, trace, uncorr, bayes));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_glmmrOptim_GradRobustStep", (DL_FUNC) &_glmmrOptim_GradRobustStep, 18},
+    {"_glmmrOptim_GradRobustStep", (DL_FUNC) &_glmmrOptim_GradRobustStep, 17},
     {NULL, NULL, 0}
 };
 

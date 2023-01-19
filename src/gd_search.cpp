@@ -38,11 +38,10 @@ Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in,
                           Eigen::ArrayXi max_obs,
                           Eigen::VectorXd weights,
                           Eigen::ArrayXi exp_cond,
-                          Eigen::ArrayXi nfix, 
+                          int nmax,
                           Rcpp::List V0_list,
-                          int any_fix = 0,
-                          int type = 0,
-                          int rd_mode = 1,
+                          Eigen::ArrayXi type,
+                          bool robust_log = false,
                           bool trace = true,
                           bool uncorr = false,
                           bool bayes = false) {
@@ -59,25 +58,43 @@ Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in,
     Dfield.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(D_list[j])));
     V0field.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(V0_list[j])));
   }
-
+  
   glmmr::OptimDesign hc(idx_in, n, Cfield, Xfield, Zfield, Dfield,
-                        w_diag,max_obs,weights, exp_cond, any_fix, 
-                        nfix, V0field, rd_mode, trace, uncorr, bayes);
+                        w_diag,max_obs,weights, exp_cond, nmax,
+                        V0field, robust_log, trace, uncorr, bayes);
+  
+  int k = type.size();
+  
+  
+  for(int i=0; i<k; i++){
+    switch(type(i))
+    {
+      case 1:
+        hc.local_search();
+        break;
+      case 2:
+        hc.greedy_search();
+        break;
+      case 3:
+        hc.reverse_greedy_search();
+        break;
+    }
+  }
 
-  if(type==0)hc.local_search();
-  if(type==1){
-    hc.local_search();
-    hc.greedy_search();
-    hc.local_search();
-  }
-  if(type==2){
-    hc.local_search();
-    hc.greedy_search();
-  }
-  if(type==3){
-    hc.greedy_search();
-    hc.local_search();
-  }
+  // if(type==0)hc.local_search();
+  // if(type==1){
+  //   hc.local_search();
+  //   hc.greedy_search();
+  //   hc.local_search();
+  // }
+  // if(type==2){
+  //   hc.local_search();
+  //   hc.greedy_search();
+  // }
+  // if(type==3){
+  //   hc.greedy_search();
+  //   hc.local_search();
+  // }
   return Rcpp::List::create(Rcpp::Named("idx_in") = hc.idx_in_,
                             Rcpp::Named("best_val_vec") = hc.val_,
                             Rcpp::Named("func_calls") = hc.fcalls_,
