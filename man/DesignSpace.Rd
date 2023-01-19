@@ -148,8 +148,10 @@ des <- Model$new(
 )
 ds <- DesignSpace$new(des)
 
-#find the optimal design of size 30 individuals
-opt <- ds$optimal(30,C=list(c(rep(0,5),1)))
+#find the optimal design of size 30 individuals using local search
+opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
+#find the optimal design of size 30 individuals using reverse greedy search
+opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=2)
 
 #let the experimental condition be the cluster
 # these experimental conditions are independent of one another
@@ -446,8 +448,10 @@ des <- Model$new(
 )
 ds <- DesignSpace$new(des)
 
-#find the optimal design of size 30 individuals
-opt <- ds$optimal(30,C=list(c(rep(0,5),1)))
+#find the optimal design of size 30 individuals using local search
+opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
+#find the optimal design of size 30 individuals using reverse greedy search
+opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=2)
 
 #let the experimental condition be the cluster
 # these experimental conditions are independent of one another
