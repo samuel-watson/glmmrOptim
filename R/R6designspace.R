@@ -229,17 +229,16 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' #find the optimal design of size 30 individuals using local search
                    #' opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
                    #' #find the optimal design of size 30 individuals using reverse greedy search
-                   #' opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=2)
+                   #' opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
                    #' 
                    #' #let the experimental condition be the cluster
                    #' # these experimental conditions are independent of one another
                    #' ds <- DesignSpace$new(des,experimental_condition = df$cl)
                    #' # now find the optimal 4 clusters to include
                    #' # approximately, finding the weights for each condition
-                   #' # note it will ignore m and just return the weights
                    #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
-                   #' # or use the exact algorithm
-                   #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE)
+                   #' # or use the local search algorithm
+                   #' opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1)
                    #' 
                    #' #robust optimisation using two designs
                    #' des2 <- des$clone(deep=TRUE)
@@ -249,7 +248,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #'   parameters = c(0.25,0.8)
                    #' )
                    #' ds <- DesignSpace$new(des,des2)
-                   #' #weighted average
+                   #' #weighted average assuming equal weights using local search
                    #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
                    optimal = function(m,
                                       C,
@@ -327,10 +326,14 @@ each condition will be reported below."))
                          agg_weights <- aggregate(idx_out,list(datahashes),sum)
                          cat("\nSum of weights for unique experimental conditions:\n",agg_weights$x)
                          idx_out <- list(weights = idx_out, unique_weights = agg_weights$x)
+                         outlist <- list(weights = idx_out,
+                                         designs = apportion(idx_out$unique_weights,m))
+                       } else {
+                         outlist <- list(weights = idx_out,
+                                         designs = apportion(idx_out,m))
                        }
-                       outlist <- list(weights = idx_out,
-                                       designs = apportion(m,idx_out))
-                       return(invisible(idx_out))
+                       
+                       return(invisible(outlist))
                      } else {
                        #initialise from random starting index
                        N <- private$designs[[1]]$mean_function$n()

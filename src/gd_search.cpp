@@ -15,12 +15,12 @@
 //' @param w_diag Matrix with each column corresponding to the diagonal of the individual level variance matrix, see \link[glmmrBase]{Model} for details
 //' @param max_obs Vector of integers specifying the maximum number of copies of each experimental condition
 //' @param weights Vector specifying the weights of each design
+//' @param nmax Integer specifying the maximum number of rows of matrices X and Z during the algorithm.
 //' @param exp_cond Vector specifying the experimental condition index of each observation
-//' @param nfix Vector listing the experimental condition indexes that are fixed in the design
 //' @param V0_list List of prior covariance matrices for the model parameters
-//' @param any_fix Integer. 0 = no experimental conditions are fixed, 1 = some experimental conditions are fixed
 //' @param type Integer. 0 = local search algorithm. 1 = local+greedy+local. 2 = local+greedy. 3 = greedy+local
-//' @param rd_mode Integer. Robust objective function, 1=weighted average, 2=minimax
+//' @param robust_log. Logical indicating to use a weighted sum of log (TRUE) or absolute (FALSE) values of the c-optimal 
+//' function when using a robust criterion.
 //' @param trace Logical indicating whether to provide detailed output
 //' @param uncorr Logical indicating whether to treat all the experimental conditions as uncorrelated (TRUE) or not (FALSE)
 //' @param bayes Logical indicating whether to use a Bayesian model with prior distributions on model parameters (TRUE) or a 

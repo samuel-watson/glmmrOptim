@@ -151,17 +151,16 @@ ds <- DesignSpace$new(des)
 #find the optimal design of size 30 individuals using local search
 opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
 #find the optimal design of size 30 individuals using reverse greedy search
-opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=2)
+opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
 
 #let the experimental condition be the cluster
 # these experimental conditions are independent of one another
 ds <- DesignSpace$new(des,experimental_condition = df$cl)
 # now find the optimal 4 clusters to include
 # approximately, finding the weights for each condition
-# note it will ignore m and just return the weights
 opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
-# or use the exact algorithm
-opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE)
+# or use the local search algorithm
+opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1)
 
 #robust optimisation using two designs
 des2 <- des$clone(deep=TRUE)
@@ -171,7 +170,7 @@ des2$covariance <- Covariance$new(
   parameters = c(0.25,0.8)
 )
 ds <- DesignSpace$new(des,des2)
-#weighted average
+#weighted average assuming equal weights using local search
 opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
 
 ## ------------------------------------------------
@@ -451,17 +450,16 @@ ds <- DesignSpace$new(des)
 #find the optimal design of size 30 individuals using local search
 opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
 #find the optimal design of size 30 individuals using reverse greedy search
-opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=2)
+opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
 
 #let the experimental condition be the cluster
 # these experimental conditions are independent of one another
 ds <- DesignSpace$new(des,experimental_condition = df$cl)
 # now find the optimal 4 clusters to include
 # approximately, finding the weights for each condition
-# note it will ignore m and just return the weights
 opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
-# or use the exact algorithm
-opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE)
+# or use the local search algorithm
+opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1)
 
 #robust optimisation using two designs
 des2 <- des$clone(deep=TRUE)
@@ -471,7 +469,7 @@ des2$covariance <- Covariance$new(
   parameters = c(0.25,0.8)
 )
 ds <- DesignSpace$new(des,des2)
-#weighted average
+#weighted average assuming equal weights using local search
 opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
 }
 \if{html}{\out{</div>}}

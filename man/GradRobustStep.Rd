@@ -45,6 +45,8 @@ GradRobustStep(
 
 \item{exp_cond}{Vector specifying the experimental condition index of each observation}
 
+\item{nmax}{Integer specifying the maximum number of rows of matrices X and Z during the algorithm.}
+
 \item{V0_list}{List of prior covariance matrices for the model parameters}
 
 \item{type}{Integer. 0 = local search algorithm. 1 = local+greedy+local. 2 = local+greedy. 3 = greedy+local}
@@ -55,10 +57,6 @@ GradRobustStep(
 
 \item{bayes}{Logical indicating whether to use a Bayesian model with prior distributions on model parameters (TRUE) or a 
 likelihood based model (FALSE)}
-
-\item{nfix}{Vector listing the experimental condition indexes that are fixed in the design}
-
-\item{any_fix}{Integer. 0 = no experimental conditions are fixed, 1 = some experimental conditions are fixed}
 
 \item{rd_mode}{Integer. Robust objective function, 1=weighted average, 2=minimax}
 }
