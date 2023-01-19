@@ -51,14 +51,15 @@ GradRobustStep(
 
 \item{type}{Integer. 0 = local search algorithm. 1 = local+greedy+local. 2 = local+greedy. 3 = greedy+local}
 
+\item{robust_log}{Logical indicating to use a weighted sum of log (TRUE) or absolute (FALSE) values of the c-optimal 
+function when using a robust criterion.}
+
 \item{trace}{Logical indicating whether to provide detailed output}
 
 \item{uncorr}{Logical indicating whether to treat all the experimental conditions as uncorrelated (TRUE) or not (FALSE)}
 
 \item{bayes}{Logical indicating whether to use a Bayesian model with prior distributions on model parameters (TRUE) or a 
 likelihood based model (FALSE)}
-
-\item{rd_mode}{Integer. Robust objective function, 1=weighted average, 2=minimax}
 }
 \value{
 A list containing: a vector of experimental condition indexes in the optimal design, the variance of the optimal design,
