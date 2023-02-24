@@ -267,11 +267,7 @@ public:
     if (trace_) Rcpp::Rcout << "\nREVERSE GREEDY SEARCH for design of size " << n_;
     int i = 0;
     int idxcount = idx_in_.size();
-    //Rcpp::Rcout << "\nIdx: " << idx_in_.transpose();
     Eigen::ArrayXd val_rm(k_);
-    
-    
-    //Rcpp::Rcout << "\nidx: \n" << idx_in_.transpose();
     
     while(idxcount > n_){
       i++;
@@ -288,7 +284,7 @@ public:
           val_rm(j-1) = 10000;
         }
       }
-      //Rcpp::Rcout << "\nval_rm: \n" << val_rm.transpose();
+      
       Eigen::Index swap_sort;
       double min = val_rm.minCoeff(&swap_sort);
       if (trace_) Rcpp::Rcout << " removing " << swap_sort+1;
@@ -299,6 +295,7 @@ public:
       }
       idxcount--;
     }
+    val_ = new_val_;
     if (trace_) Rcpp::Rcout << "\nFINISHED REVERSE GREEDY SEARCH";
   }
   
@@ -355,9 +352,9 @@ private:
       if(rtn_val)vals(idx) = bayes_ ? glmmr::maths::c_obj_fun( M+V0_list_(idx), C_list_(idx)) : glmmr::maths::c_obj_fun( M, C_list_(idx));
       
       if(keep_mat){
-        if(idx==0)r_in_design_ = rm1A.rows();
         M_list_.replace(idx,M);
-        A_list_.block(idx*nmax_,0,r_in_design_,r_in_design_) = rm1A;
+        A_list_.block(idx*nmax_,0,r_in_rm_,r_in_rm_) = rm1A;
+        if(idx==(nlist_-1))r_in_design_ = rm1A.rows();
       } 
     }
     

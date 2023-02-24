@@ -191,6 +191,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' 
                    #' @param m A positive integer specifying the number of experimental conditions to include.
                    #' @param C Either a vector or a list of vectors of the same length as the number of designs, see Details.
+                   #' @param attenuate_pars Logical indicating whether to adapt the marginal expecation in non-linear models 
                    #' @param V0 Optional. If a Bayesian c-optimality problem then this should be a list of prior covariance matrices for the model parameters
                    #' the same length as the number of designs.
                    #' @param rm_cols Optional. A list of vectors indicating columns of X to remove from each design, see Details.
@@ -252,6 +253,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
                    optimal = function(m,
                                       C,
+                                      attenuate_pars = FALSE,
                                       V0=NULL,
                                       rm_cols=NULL,
                                       keep=FALSE,
@@ -265,6 +267,12 @@ DesignSpace <- R6::R6Class("DesignSpace",
                      if(!is.null(V0) & length(V0)!=self$n()[[1]])stop("V0 not equal to number of designs")
                      ## add checks
                      if(any(!algo%in%1:3))stop("Algorithm(s) must be a combination of 1, 2, and 3")
+                     
+                     ## update designs if attenuated parameters
+                     for(i in 1:self$n()[[1]]){
+                       private$designs[[i]]$use_attenuation(attenuate_pars)
+                     }
+                     
                      # dispatch to correct algorithm
                      # check if the experimental conditions are correlated or not
                      #loop through each sigma
@@ -279,6 +287,9 @@ DesignSpace <- R6::R6Class("DesignSpace",
                        }
                        if(!uncorr)break
                      }
+                     
+                     
+                     
                      ## need to detect if the experimental conditions are duplicated
                      ## can update this but currently only provides a warning to the user
                      if(uncorr&!use_combin){
@@ -311,6 +322,8 @@ each condition will be reported below."))
                      } else {
                        C_list <- C
                      }
+                     
+                     
                      
                      if(verbose&uncorr&!use_combin)message("Experimental conditions uncorrelated, using second-order cone program")
                      if(verbose&uncorr&use_combin)message("Experimental conditions uncorrelated, but using hill climbing algorithm")
@@ -444,28 +457,6 @@ each condition will be reported below."))
                            V0[[i]] <- matrix(1)
                          }
                        }
-                       
-                       # #for debugging
-                       # idx_in <<- idx_in
-                       # rowhash <<- row.hash
-                       # args1 <<- list(idx_in = idx_in,
-                       #               n=m,
-                       #               C_list = C_list,
-                       #               X_list = X_list,
-                       #               Z_list = Z_list,
-                       #               D_list = D_list,
-                       #               w_diag = w_diag,
-                       #               max_obs = max_obs,
-                       #               nmax = N,
-                       #               V0_list = V0,
-                       #               weights = weights,
-                       #               exp_cond = expcond.id,
-                       #               type = algo-1,
-                       #               robust_log = robust_log,
-                       #               trace=verbose,
-                       #               uncorr=uncorr,
-                       #               bayes=bayes)
-                       # stop("testing")
                        
                        out_list <- GradRobustStep(idx_in = idx_in, 
                                                   n=m,
