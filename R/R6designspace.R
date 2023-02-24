@@ -269,8 +269,13 @@ DesignSpace <- R6::R6Class("DesignSpace",
                      if(any(!algo%in%1:3))stop("Algorithm(s) must be a combination of 1, 2, and 3")
                      
                      ## update designs if attenuated parameters
-                     for(i in 1:self$n()[[1]]){
-                       private$designs[[i]]$use_attenuation(attenuate_pars)
+                     if(attenuate_pars & packageVersion('glmmrBase') < '0.2.5'){
+                       warning("Linear predictor attenuation requires glmmrBase version 0.2.6 or higher. To install the latest version use 
+                               devtools::install_github('samuel-watson/glmmrBase')")
+                     } else {
+                       for(i in 1:self$n()[[1]]){
+                         private$designs[[i]]$use_attenuation(attenuate_pars)
+                       }
                      }
                      
                      # dispatch to correct algorithm

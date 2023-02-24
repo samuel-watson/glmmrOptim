@@ -381,6 +381,7 @@ Algorithms to identify an approximate c-optimal design of size m within the desi
 \if{html}{\out{<div class="r">}}\preformatted{DesignSpace$optimal(
   m,
   C,
+  attenuate_pars = FALSE,
   V0 = NULL,
   rm_cols = NULL,
   keep = FALSE,
@@ -398,6 +399,8 @@ Algorithms to identify an approximate c-optimal design of size m within the desi
 \item{\code{m}}{A positive integer specifying the number of experimental conditions to include.}
 
 \item{\code{C}}{Either a vector or a list of vectors of the same length as the number of designs, see Details.}
+
+\item{\code{attenuate_pars}}{Logical indicating whether to adapt the marginal expecation in non-linear models}
 
 \item{\code{V0}}{Optional. If a Bayesian c-optimality problem then this should be a list of prior covariance matrices for the model parameters
 the same length as the number of designs.}
