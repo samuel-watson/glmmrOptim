@@ -3,7 +3,7 @@
 
 #include <cmath> 
 #include <RcppEigen.h>
-#include <glmmr.h>
+//#include <glmmr.h>
 #include "optimmaths.h"
 
 namespace glmmr {
