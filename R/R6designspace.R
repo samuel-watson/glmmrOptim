@@ -287,7 +287,8 @@ DesignSpace <- R6::R6Class("DesignSpace",
                      unique_exp_cond <- unique(self$experimental_condition)
                      for(i in 1:self$n()[[1]]){
                        for(j in unique_exp_cond){
-                         uncorr <- all(private$designs[[i]]$Sigma[which(self$experimental_condition==j),which(self$experimental_condition!=j)]==0)
+                         S <- private$designs[[i]]$Sigma()
+                         uncorr <- all(S[which(self$experimental_condition==j),which(self$experimental_condition!=j)]==0)
                          if(!uncorr)break
                        }
                        if(!uncorr)break
@@ -302,8 +303,9 @@ DesignSpace <- R6::R6Class("DesignSpace",
                        for(j in unique_exp_cond){
                          datalist <- list()
                          for(k in 1:self$n()[[1]]){
-                           datalist[[k]] <- list(private$designs[[i]]$mean_function$X[self$experimental_condition==j,],
-                                                 private$designs[[i]]$Sigma[self$experimental_condition==j,self$experimental_condition==j])
+                           S <- private$designs[[i]]$Sigma()
+                           datalist[[k]] <- list(private$designs[[i]]$mean$X[self$experimental_condition==j,],
+                                                 S[self$experimental_condition==j,self$experimental_condition==j])
                          }
                          datahashes <- c(datahashes, digest::digest(datalist))
                        }
@@ -354,7 +356,7 @@ each condition will be reported below."))
                        return(invisible(outlist))
                      } else {
                        #initialise from random starting index
-                       N <- private$designs[[1]]$mean_function$n()
+                       N <- private$designs[[1]]$mean$n()
                        X_list <- private$genXlist()
                        Z_list <- private$genZlist()
                        D_list <- private$genDlist()
@@ -501,7 +503,7 @@ each condition will be reported below."))
                        if(keep){
                          for(i in 1:self$n()[[1]]){
                            private$designs[[i]]$subset_rows(rows_in)
-                           ncol <- 1:ncol(private$designs[[i]]$mean_function$X)
+                           ncol <- 1:ncol(private$designs[[i]]$mean$X)
                            if(!is.null(rm_cols))private$designs[[i]]$subset_cols(ncol[-rm_cols[[i]]])
                            private$designs[[i]]$check(verbose=FALSE)
                          }
@@ -526,14 +528,14 @@ each condition will be reported below."))
                    genXlist = function(){
                      X_list <- list()
                      for(i in 1:self$n()[[1]]){
-                       X_list[[i]] <- as.matrix(private$designs[[i]]$mean_function$X)
+                       X_list[[i]] <- as.matrix(private$designs[[i]]$mean$X)
                      }
                      return(X_list)
                    },
                    genSlist = function(){
                      S_list <- list()
                      for(i in 1:self$n()[[1]]){
-                       S_list[[i]] <- as.matrix(private$designs[[i]]$Sigma)
+                       S_list[[i]] <- as.matrix(private$designs[[i]]$Sigma())
                      }
                      return(S_list)
                    },

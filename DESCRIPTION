@@ -22,7 +22,7 @@ Imports:
 LinkingTo: 
     Rcpp (>= 1.0.7),
     RcppEigen,
-    glmmrBase (>= 0.2.4)
+    glmmrBase (>= 0.3.1)
 RoxygenNote: 7.2.1
 NeedsCompilation: yes
 Author: Sam Watson [aut, cre],
