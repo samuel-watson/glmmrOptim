@@ -426,9 +426,9 @@ each condition will be reported below."))
                          X_list[[i]] <- X_list[[i]][idx.nodup,]
                          Z_list[[i]] <- Z_list[[i]][idx.nodup,]
                          if(is.null(rm_cols)){
-                           w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[idx.nodup]
+                           w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[idx.nodup]
                          } else {
-                           w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[-zero_idx][idx.nodup]
+                           w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
                          }
                        }
                        
