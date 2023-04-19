@@ -23,7 +23,7 @@ LinkingTo:
     Rcpp (>= 1.0.7),
     RcppEigen,
     glmmrBase (>= 0.3.1)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 NeedsCompilation: yes
 Author: Sam Watson [aut, cre],
         Yi Pan [aut]

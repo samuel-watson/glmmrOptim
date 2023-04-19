@@ -79,7 +79,7 @@ The weighted sum is either a sum of the absolute value of the c-optimal criterio
 
 df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
-des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl*t)),
+des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
                                    parameters = c(0.25,0.1)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
@@ -88,10 +88,13 @@ des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl*t)),
                  var_par = 1)
 ds <- DesignSpace$new(des)
 #add another design
-des2 <- des$clone(deep=TRUE)
-des2$covariance <- Covariance$new(data = df,
-                       formula = ~ (1|gr(cl)*ar1(t)),
-                       parameters = c(0.25,0.8))
+des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
+                                   parameters = c(0.25,0.8)),
+                 mean = list(formula = ~ int + factor(t) - 1,
+                             parameters = rep(0,4)),
+                 data=df,
+                 family=gaussian(),
+                 var_par = 1)
 ds$add(des2)
 #report the size of the design
 ds$n()
@@ -236,7 +239,7 @@ A `DesignSpace` object
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
-des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl*t)),
+des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
                                    parameters = c(0.25,0.1)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
@@ -245,10 +248,13 @@ des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl*t)),
                  var_par = 1)
 ds <- DesignSpace$new(des)
 #add another design
-des2 <- des$clone(deep=TRUE)
-des2$covariance <- Covariance$new(data = df,
-                       formula = ~ (1|gr(cl)*ar1(t)),
-                       parameters = c(0.25,0.8))
+des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
+                                   parameters = c(0.25,0.8)),
+                 mean = list(formula = ~ int + factor(t) - 1,
+                             parameters = rep(0,4)),
+                 data=df,
+                 family=gaussian(),
+                 var_par = 1)
 ds$add(des2)
 #report the size of the design
 ds$n()
