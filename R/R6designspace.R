@@ -312,11 +312,14 @@ DesignSpace <- R6::R6Class("DesignSpace",
                          for(k in 1:self$n()[[1]]){
                            if(packageVersion('glmmrBase') < '0.3.0'){
                              S <- private$designs[[i]]$Sigma
+                             datalist[[k]] <- list(private$designs[[i]]$mean_function$X[self$experimental_condition==j,],
+                                                   S[self$experimental_condition==j,self$experimental_condition==j])
                            } else {
                              S <- private$designs[[i]]$Sigma()
+                             datalist[[k]] <- list(private$designs[[i]]$mean$X[self$experimental_condition==j,],
+                                                   S[self$experimental_condition==j,self$experimental_condition==j])
                            }
-                           datalist[[k]] <- list(private$designs[[i]]$mean$X[self$experimental_condition==j,],
-                                                 S[self$experimental_condition==j,self$experimental_condition==j])
+                           
                          }
                          datahashes <- c(datahashes, digest::digest(datalist))
                        }
@@ -366,15 +369,18 @@ each condition will be reported below."))
                        
                        return(invisible(outlist))
                      } else {
+                       print("here 1")
                        #initialise from random starting index
-                       N <- private$designs[[1]]$mean$n()
+                       if(packageVersion('glmmrBase') < '0.3.0'){
+                         N <- private$designs[[1]]$mean_function$n()
+                       } else {
+                         N <- private$designs[[1]]$mean$n()
+                       }
                        X_list <- private$genXlist()
                        Z_list <- private$genZlist()
                        D_list <- private$genDlist()
-                       
                        #sig_list <- private$genSlist()
                        weights <- self$weights
-                       #rdmode <- 1#ifelse(robust_function=="weighted",1,0)
                        if(!is.null(rm_cols))
                        {
                          if(!is(rm_cols,"list"))stop("rm_cols should be a list")
@@ -523,7 +529,12 @@ each condition will be reported below."))
                        if(keep){
                          for(i in 1:self$n()[[1]]){
                            private$designs[[i]]$subset_rows(rows_in)
-                           ncol <- 1:ncol(private$designs[[i]]$mean$X)
+                           if(packageVersion('glmmrBase') < '0.3.0'){
+                             ncol <- 1:ncol(private$designs[[i]]$mean_function$X)
+                           } else {
+                             ncol <- 1:ncol(private$designs[[i]]$mean$X)
+                           }
+                           
                            if(!is.null(rm_cols))private$designs[[i]]$subset_cols(ncol[-rm_cols[[i]]])
                            private$designs[[i]]$check(verbose=FALSE)
                          }
@@ -548,7 +559,11 @@ each condition will be reported below."))
                    genXlist = function(){
                      X_list <- list()
                      for(i in 1:self$n()[[1]]){
-                       X_list[[i]] <- as.matrix(private$designs[[i]]$mean$X)
+                       if(packageVersion('glmmrBase') < '0.3.0'){
+                         X_list[[i]] <- as.matrix(private$designs[[i]]$mean_function$X)
+                       } else {
+                         X_list[[i]] <- as.matrix(private$designs[[i]]$mean$X)
+                       }
                      }
                      return(X_list)
                    },
