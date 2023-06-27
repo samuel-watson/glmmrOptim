@@ -47,8 +47,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #'                  mean = list(formula = ~ int + factor(t) - 1,
                    #'                              parameters = rep(0,4)),
                    #'                  data=df,
-                   #'                  family=gaussian(),
-                   #'                  var_par = 1)
+                   #'                  family=gaussian())
                    #' ds <- DesignSpace$new(des)
                    #' #add another design
                    #' des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
@@ -56,8 +55,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #'                  mean = list(formula = ~ int + factor(t) - 1,
                    #'                              parameters = rep(0,4)),
                    #'                  data=df,
-                   #'                  family=gaussian(),
-                   #'                  var_par = 1)
+                   #'                  family=gaussian())
                    #' ds$add(des2)
                    #' #report the size of the design
                    #' ds$n()
