@@ -5,5 +5,6 @@
 #include <RcppEigen.h>
 #include "optim/matrixfield.h"
 #include "optim/optimclass.h"
+#include "optim/optimdata.h"
 
 #endif

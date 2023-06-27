@@ -9,8 +9,6 @@
 namespace glmmr {
 namespace algo {
 
-
-
 //removes index from square matrix
 inline Eigen::MatrixXd remove_one_many_mat(const Eigen::MatrixXd &A, 
                                            const Eigen::ArrayXi &i) {
@@ -111,13 +109,5 @@ inline Eigen::ArrayXi uvec_minus(const Eigen::ArrayXi &v,
 }
 
 }
-
-
-
-
-
-
-
-
 
 #endif

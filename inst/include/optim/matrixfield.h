@@ -19,12 +19,8 @@ class MatrixField{
     
     MatrixField(){};
     
-    MatrixField(const glmmr::MatrixField<T> &field){
-      for(int i=0; i < field.data.size(); i++){
-        data.push_back(std::make_unique<T>(*(field.data[i])));
-      }
-      // data.reserve(field.data.size());
-      // data = field.data;
+    MatrixField(const glmmr::MatrixField<T> &field) {
+      for(auto& e : field.data)data.push_back(std::make_unique<T>(*e));
     }
     
     void add(T matrix){
@@ -40,9 +36,6 @@ class MatrixField{
       return data[n]->row(i);
     }
     
-    // T* get_ptr(int n){
-    //   return data[n];
-    // }
     std::unique_ptr<T> get_ptr(int n){
       return data[n];
     }

@@ -80,7 +80,7 @@ The weighted sum is either a sum of the absolute value of the c-optimal criterio
 df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
 des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.25,0.1)),
+                                   parameters = c(0.04,0.01)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
@@ -89,7 +89,7 @@ des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
 ds <- DesignSpace$new(des)
 #add another design
 des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.25,0.8)),
+                                   parameters = c(0.05,0.8)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
@@ -142,7 +142,7 @@ df$int <- 0
 df[df$t >= df$cl, 'int'] <- 1
 des <- Model$new(
   covariance = list(formula = ~ (1|gr(cl)),
-                    parameters = c(0.25)),
+                    parameters = c(0.05)),
   mean = list(formula = ~ factor(t) + int - 1, 
               parameters = c(rep(0,5),0.6)),
   data=df,
@@ -240,7 +240,7 @@ A `DesignSpace` object
 \preformatted{df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
 des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.25,0.1)),
+                                   parameters = c(0.04,0.01)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
@@ -249,7 +249,7 @@ des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
 ds <- DesignSpace$new(des)
 #add another design
 des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.25,0.8)),
+                                   parameters = c(0.05,0.8)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
@@ -447,7 +447,7 @@ df$int <- 0
 df[df$t >= df$cl, 'int'] <- 1
 des <- Model$new(
   covariance = list(formula = ~ (1|gr(cl)),
-                    parameters = c(0.25)),
+                    parameters = c(0.05)),
   mean = list(formula = ~ factor(t) + int - 1, 
               parameters = c(rep(0,5),0.6)),
   data=df,

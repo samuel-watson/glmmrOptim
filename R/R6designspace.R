@@ -43,7 +43,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
                    #' df$int <- df$int - 1
                    #' des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                   #'                                    parameters = c(0.25,0.1)),
+                   #'                                    parameters = c(0.04,0.01)),
                    #'                  mean = list(formula = ~ int + factor(t) - 1,
                    #'                              parameters = rep(0,4)),
                    #'                  data=df,
@@ -52,7 +52,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' ds <- DesignSpace$new(des)
                    #' #add another design
                    #' des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                   #'                                    parameters = c(0.25,0.8)),
+                   #'                                    parameters = c(0.05,0.8)),
                    #'                  mean = list(formula = ~ int + factor(t) - 1,
                    #'                              parameters = rep(0,4)),
                    #'                  data=df,
@@ -221,7 +221,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' df[df$t >= df$cl, 'int'] <- 1
                    #' des <- Model$new(
                    #'   covariance = list(formula = ~ (1|gr(cl)),
-                   #'                     parameters = c(0.25)),
+                   #'                     parameters = c(0.05)),
                    #'   mean = list(formula = ~ factor(t) + int - 1, 
                    #'               parameters = c(rep(0,5),0.6)),
                    #'   data=df,
@@ -280,7 +280,6 @@ DesignSpace <- R6::R6Class("DesignSpace",
                          private$designs[[i]]$use_attenuation(attenuate_pars)
                        }
                      }
-                     
                      # dispatch to correct algorithm
                      # check if the experimental conditions are correlated or not
                      #loop through each sigma
@@ -300,8 +299,6 @@ DesignSpace <- R6::R6Class("DesignSpace",
                        }
                        if(!uncorr)break
                      }
-                     
-                     
                      
                      ## need to detect if the experimental conditions are duplicated
                      ## can update this but currently only provides a warning to the user
@@ -344,8 +341,6 @@ each condition will be reported below."))
                        C_list <- C
                      }
                      
-                     
-                     
                      if(verbose&uncorr&!use_combin)message("Experimental conditions uncorrelated, using second-order cone program")
                      if(verbose&uncorr&use_combin)message("Experimental conditions uncorrelated, but using hill climbing algorithm")
                      if(verbose&!uncorr)message("Experimental conditions correlated, using combinatorial search algorithms")
@@ -369,7 +364,6 @@ each condition will be reported below."))
                        
                        return(invisible(outlist))
                      } else {
-                       print("here 1")
                        #initialise from random starting index
                        if(packageVersion('glmmrBase') < '0.3.0'){
                          N <- private$designs[[1]]$mean_function$n()
@@ -379,14 +373,12 @@ each condition will be reported below."))
                        X_list <- private$genXlist()
                        Z_list <- private$genZlist()
                        D_list <- private$genDlist()
-                       #sig_list <- private$genSlist()
                        weights <- self$weights
                        if(!is.null(rm_cols))
                        {
                          if(!is(rm_cols,"list"))stop("rm_cols should be a list")
                          zero_idx <- c()
                          idx_original <- 1:nrow(X_list[[1]])
-                         
                          # find all the entries with non-zero values of the given columns in each design
                          for(i in 1:length(rm_cols))
                          {
@@ -398,19 +390,11 @@ each condition will be reported below."))
                            }
                          }
                          zero_idx <- sort(unique(zero_idx))
-                         
-                         # exp_cond <- as.numeric(factor(self$experimental_condition[-zero_idx],
-                         #                                  levels=unique(self$experimental_condition[-zero_idx])))
                          expcond <- self$experimental_condition[-zero_idx]
                          uexpcond <- unique(self$experimental_condition[-zero_idx])
                          ncond <- length(uexpcond)
-                         
-                         # idx_in <- sort(sample(1:(N-length(zero_idx)),m,replace=FALSE))
                          idx_original <- idx_original[-zero_idx]
-                         # idx_in <- match(idx_in,idx_original)
-                         
                          if(verbose)message(paste0("removing ",length(zero_idx)," observations"))
-                         
                          #update the matrices
                          for(i in 1:length(rm_cols))
                          {
@@ -418,23 +402,18 @@ each condition will be reported below."))
                            C_list[[i]] <- C_list[[i]][-rm_cols[[i]]]
                            sig_list[[i]] <- sig_list[[i]][-zero_idx,-zero_idx]
                          }
-                         
                          N <- nrow(X_list[[1]])
-                         
                        } else {
                          expcond <- self$experimental_condition
                          uexpcond <- unique(self$experimental_condition)
                        }
-                       
                        ncond <- length(uexpcond)
                        XZ <- cbind(X_list[[1]],Z_list[[1]])
                        XZ.hash <- c()
                        for(i in unique(expcond)){
                          XZ.hash <- c(XZ.hash,digest::digest(XZ[expcond==i,]))
                        }
-                       #XZ.hash <- apply(XZ,1,digest::digest)
                        row.hash <- as.numeric(factor(XZ.hash,levels=unique(XZ.hash)))
-                       #idx.bool <- c(!duplicated(row.hash)) + c(duplicated(expcond)) 
                        ridx.nodup <- which(!duplicated(row.hash))
                        idx.nodup <- which(expcond %in% unique(expcond)[ridx.nodup])
                        n.uni.obs <- length(idx.nodup)
@@ -443,24 +422,28 @@ each condition will be reported below."))
                          X_list[[i]] <- X_list[[i]][idx.nodup,]
                          Z_list[[i]] <- Z_list[[i]][idx.nodup,]
                          if(packageVersion('glmmrBase') < '0.3.0'){
+                           message("Use of this package with glmmrBase <0.3.0 will be prevented in the near future.")
                            if(is.null(rm_cols)){
                              w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[idx.nodup]
                            } else {
                              w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[-zero_idx][idx.nodup]
                            }
-                         } else {
+                         } else if(packageVersion('glmmrBase') < '0.4.2'){
                            if(is.null(rm_cols)){
                              w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[idx.nodup]
                            } else {
                              w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
                            }
+                         } else {
+                           if(is.null(rm_cols)){
+                             w_diag[,i] <- Matrix::drop(private$designs[[i]]$w_matrix())[idx.nodup]
+                           } else {
+                             w_diag[,i] <- Matrix::drop(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
+                           }
                          }
-                         
                        }
-                       
                        max_obs <- unname(table(row.hash))
                        expcond.id <- as.numeric(factor(expcond[idx.nodup],levels = unique(expcond[idx.nodup])))
-                       
                        if(algo[1]==1){
                          idx_in <- sort(sample(row.hash,m,replace=FALSE))
                        } else if(algo[1]==2){
@@ -475,9 +458,7 @@ each condition will be reported below."))
                          }
                        } else if(algo[1]==3){
                          idx_in <- row.hash
-                         
                        }
-                         
                        bayes <- FALSE
                        if(!is.null(V0)){
                          bayes <- TRUE
@@ -491,18 +472,18 @@ each condition will be reported below."))
                          }
                        }
                        
-                       out_list <- GradRobustStep(idx_in = idx_in, 
-                                                  n=m,
-                                                  C_list = C_list, 
+                       out_list <- GradRobustStep(C_list = C_list, 
                                                   X_list = X_list,
                                                   Z_list = Z_list,
                                                   D_list = D_list,
                                                   w_diag = w_diag,
-                                                  max_obs = max_obs,
-                                                  nmax = N+10,
                                                   V0_list = V0,
+                                                  max_obs = max_obs,
                                                   weights = weights, 
                                                   exp_cond = expcond.id,
+                                                  idx_in = idx_in, 
+                                                  n=m,
+                                                  nmax = N+10,
                                                   type = algo,
                                                   robust_log = robust_log,
                                                   trace=verbose,
@@ -510,7 +491,6 @@ each condition will be reported below."))
                                                   bayes=bayes)
                        
                        idx_out <- drop(out_list[["idx_in"]] )
-                       
                        idx_out_exp <- sort(idx_out)
                        rows_in <- c()
                        for(i in 1:length(idx_out_exp)){
@@ -522,7 +502,6 @@ each condition will be reported below."))
                          }
                          rows_in <- c(rows_in, which(expcond == idx_out_exp[i]))
                        }
-                       
                        if(!is.null(rm_cols)){
                          rows_in <- idx_original[rows_in]
                        } 
@@ -539,8 +518,6 @@ each condition will be reported below."))
                            private$designs[[i]]$check(verbose=FALSE)
                          }
                        }
-                       
-                       #if(verbose)cat("Experimental conditions in the optimal design: ", idx_out_exp$rows)
                        return(invisible(list(rows = sort(rows_in), exp.cond = sort(idx_out_exp), val = out_list$best_val_vec,
                                              func_calls = out_list$func_calls, mat_ops = out_list$mat_ops)))
                      }

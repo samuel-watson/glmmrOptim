@@ -1,6 +1,8 @@
 #ifndef OPTIMMATHS_H
 #define OPTIMMATHS_H
 
+#define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
+
 #include <cmath> 
 #include <RcppEigen.h>
 //#include <glmmr.h>

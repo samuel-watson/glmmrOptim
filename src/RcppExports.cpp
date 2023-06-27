@@ -13,29 +13,29 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // GradRobustStep
-Rcpp::List GradRobustStep(Eigen::ArrayXi idx_in, int n, Rcpp::List C_list, Rcpp::List X_list, Rcpp::List Z_list, Rcpp::List D_list, Eigen::MatrixXd w_diag, Eigen::ArrayXi max_obs, Eigen::VectorXd weights, Eigen::ArrayXi exp_cond, int nmax, Rcpp::List V0_list, Eigen::ArrayXi type, bool robust_log, bool trace, bool uncorr, bool bayes);
-RcppExport SEXP _glmmrOptim_GradRobustStep(SEXP idx_inSEXP, SEXP nSEXP, SEXP C_listSEXP, SEXP X_listSEXP, SEXP Z_listSEXP, SEXP D_listSEXP, SEXP w_diagSEXP, SEXP max_obsSEXP, SEXP weightsSEXP, SEXP exp_condSEXP, SEXP nmaxSEXP, SEXP V0_listSEXP, SEXP typeSEXP, SEXP robust_logSEXP, SEXP traceSEXP, SEXP uncorrSEXP, SEXP bayesSEXP) {
+Rcpp::List GradRobustStep(Rcpp::List C_list, Rcpp::List X_list, Rcpp::List Z_list, Rcpp::List D_list, SEXP w_diag, Rcpp::List V0_list, SEXP max_obs, SEXP weights, SEXP exp_cond, SEXP idx_in, int n, int nmax, SEXP type, bool robust_log, bool trace, bool uncorr, bool bayes);
+RcppExport SEXP _glmmrOptim_GradRobustStep(SEXP C_listSEXP, SEXP X_listSEXP, SEXP Z_listSEXP, SEXP D_listSEXP, SEXP w_diagSEXP, SEXP V0_listSEXP, SEXP max_obsSEXP, SEXP weightsSEXP, SEXP exp_condSEXP, SEXP idx_inSEXP, SEXP nSEXP, SEXP nmaxSEXP, SEXP typeSEXP, SEXP robust_logSEXP, SEXP traceSEXP, SEXP uncorrSEXP, SEXP bayesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::ArrayXi >::type idx_in(idx_inSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type C_list(C_listSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type X_list(X_listSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type Z_list(Z_listSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type D_list(D_listSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type w_diag(w_diagSEXP);
-    Rcpp::traits::input_parameter< Eigen::ArrayXi >::type max_obs(max_obsSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type weights(weightsSEXP);
-    Rcpp::traits::input_parameter< Eigen::ArrayXi >::type exp_cond(exp_condSEXP);
-    Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type w_diag(w_diagSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type V0_list(V0_listSEXP);
-    Rcpp::traits::input_parameter< Eigen::ArrayXi >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type max_obs(max_obsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type exp_cond(exp_condSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type idx_in(idx_inSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type type(typeSEXP);
     Rcpp::traits::input_parameter< bool >::type robust_log(robust_logSEXP);
     Rcpp::traits::input_parameter< bool >::type trace(traceSEXP);
     Rcpp::traits::input_parameter< bool >::type uncorr(uncorrSEXP);
     Rcpp::traits::input_parameter< bool >::type bayes(bayesSEXP);
-    rcpp_result_gen = Rcpp::wrap(GradRobustStep(idx_in, n, C_list, X_list, Z_list, D_list, w_diag, max_obs, weights, exp_cond, nmax, V0_list, type, robust_log, trace, uncorr, bayes));
+    rcpp_result_gen = Rcpp::wrap(GradRobustStep(C_list, X_list, Z_list, D_list, w_diag, V0_list, max_obs, weights, exp_cond, idx_in, n, nmax, type, robust_log, trace, uncorr, bayes));
     return rcpp_result_gen;
 END_RCPP
 }
