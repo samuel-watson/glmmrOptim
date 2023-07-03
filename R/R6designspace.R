@@ -234,9 +234,8 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' )
                    #' ds <- DesignSpace$new(des)
                    #' 
-                   #' #find the optimal design of size 30 individuals using local search
-                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
                    #' #find the optimal design of size 30 individuals using reverse greedy search
+                   #' # change algo=1 for local search, and algo = 2 for greedy search
                    #' opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
                    #' 
                    #' #let the experimental condition be the cluster
@@ -257,7 +256,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' )
                    #' ds <- DesignSpace$new(des,des2)
                    #' #weighted average assuming equal weights using local search
-                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
+                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=3))
                    optimal = function(m,
                                       C,
                                       attenuate_pars = FALSE,
