@@ -40,6 +40,9 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' are separate experimental conditions.
                    #' @return A `DesignSpace` object
                    #' @examples
+                   #' \dontshow{
+                   #' glmmrBase::setParallel(FALSE) # for the CRAN check
+                   #' }
                    #' df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
                    #' df$int <- df$int - 1
                    #' des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
@@ -214,6 +217,9 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' the list contains the rows in the optimal design, the indexes of the experimental conditions in the optimal design,
                    #' the variance from this design, and the total number of function evaluations. Optionally the linked designs are also modified (see option `keep`).
                    #' @examples
+                   #' \dontshow{
+                   #' glmmrBase::setParallel(FALSE) # for the CRAN check
+                   #' }
                    #' df <- nelder(~(cl(6)*t(5)) > ind(5))
                    #' df$int <- 0
                    #' df[df$t >= df$cl, 'int'] <- 1

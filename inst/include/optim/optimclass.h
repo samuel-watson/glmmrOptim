@@ -14,6 +14,8 @@ using namespace Eigen;
 
 namespace glmmr {
 
+// I plan to refactor this class as it is too big!
+
 class OptimDesign {
 private:
   glmmr::OptimData& data_;
