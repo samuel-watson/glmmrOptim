@@ -39,9 +39,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// setParallelOptim
+void setParallelOptim(SEXP parallel_, int cores_);
+RcppExport SEXP _glmmrOptim_setParallelOptim(SEXP parallel_SEXP, SEXP cores_SEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type parallel_(parallel_SEXP);
+    Rcpp::traits::input_parameter< int >::type cores_(cores_SEXP);
+    setParallelOptim(parallel_, cores_);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_glmmrOptim_GradRobustStep", (DL_FUNC) &_glmmrOptim_GradRobustStep, 17},
+    {"_glmmrOptim_setParallelOptim", (DL_FUNC) &_glmmrOptim_setParallelOptim, 2},
     {NULL, NULL, 0}
 };
 

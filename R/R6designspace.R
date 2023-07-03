@@ -42,6 +42,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' @examples
                    #' \dontshow{
                    #' glmmrBase::setParallel(FALSE) # for the CRAN check
+                   #' setParallelOptim(FALSE)
                    #' }
                    #' df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
                    #' df$int <- df$int - 1
@@ -219,6 +220,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' @examples
                    #' \dontshow{
                    #' glmmrBase::setParallel(FALSE) # for the CRAN check
+                   #' setParallelOptim(FALSE)
                    #' }
                    #' df <- nelder(~(cl(6)*t(5)) > ind(5))
                    #' df$int <- 0
@@ -256,7 +258,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' )
                    #' ds <- DesignSpace$new(des,des2)
                    #' #weighted average assuming equal weights using local search
-                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=3))
+                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=1))
                    optimal = function(m,
                                       C,
                                       attenuate_pars = FALSE,

@@ -5,3 +5,16 @@ GradRobustStep <- function(C_list, X_list, Z_list, D_list, w_diag, V0_list, max_
     .Call(`_glmmrOptim_GradRobustStep`, C_list, X_list, Z_list, D_list, w_diag, V0_list, max_obs, weights, exp_cond, idx_in, n, nmax, type, robust_log, trace, uncorr, bayes)
 }
 
+#' Disable or enable parallelised computing
+#' 
+#' By default, the package will use multithreading for many calculations if OpenMP is 
+#' available on the system. For multi-user systems this may not be desired, so parallel
+#' execution can be disabled with this function.
+#' 
+#' @param parallel_ Logical indicating whether to use parallel computation (TRUE) or disable it (FALSE)
+#' @param cores_ Number of cores for parallel execution
+#' @return None, called for effects
+setParallelOptim <- function(parallel_, cores_ = 2L) {
+    invisible(.Call(`_glmmrOptim_setParallelOptim`, parallel_, cores_))
+}
+
