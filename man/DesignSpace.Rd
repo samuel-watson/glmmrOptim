@@ -77,6 +77,10 @@ The weighted sum is either a sum of the absolute value of the c-optimal criterio
 ## Method `DesignSpace$new`
 ## ------------------------------------------------
 
+\dontshow{
+glmmrBase::setParallel(FALSE) # for the CRAN check
+setParallelOptim(FALSE)
+}
 df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
 des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
@@ -84,8 +88,7 @@ des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
-                 family=gaussian(),
-                 var_par = 1)
+                 family=gaussian())
 ds <- DesignSpace$new(des)
 #add another design
 des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
@@ -93,8 +96,7 @@ des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
-                 family=gaussian(),
-                 var_par = 1)
+                 family=gaussian())
 ds$add(des2)
 #report the size of the design
 ds$n()
@@ -137,6 +139,10 @@ ds <- DesignSpace$new(des,des2,experimental_condition = df$cl)
 ## Method `DesignSpace$optimal`
 ## ------------------------------------------------
 
+\dontshow{
+glmmrBase::setParallel(FALSE) # for the CRAN check
+setParallelOptim(FALSE)
+}
 df <- nelder(~(cl(6)*t(5)) > ind(5))
 df$int <- 0
 df[df$t >= df$cl, 'int'] <- 1
@@ -151,9 +157,8 @@ des <- Model$new(
 )
 ds <- DesignSpace$new(des)
 
-#find the optimal design of size 30 individuals using local search
-opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
 #find the optimal design of size 30 individuals using reverse greedy search
+# change algo=1 for local search, and algo = 2 for greedy search
 opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
 
 #let the experimental condition be the cluster
@@ -174,7 +179,7 @@ des2$covariance <- Covariance$new(
 )
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
-opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
+opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=1))
 
 ## ------------------------------------------------
 ## Method `DesignSpace$show`
@@ -237,15 +242,18 @@ A `DesignSpace` object
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
+\preformatted{\dontshow{
+glmmrBase::setParallel(FALSE) # for the CRAN check
+setParallelOptim(FALSE)
+}
+df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
 des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
                                    parameters = c(0.04,0.01)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
-                 family=gaussian(),
-                 var_par = 1)
+                 family=gaussian())
 ds <- DesignSpace$new(des)
 #add another design
 des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
@@ -253,8 +261,7 @@ des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
                  mean = list(formula = ~ int + factor(t) - 1,
                              parameters = rep(0,4)),
                  data=df,
-                 family=gaussian(),
-                 var_par = 1)
+                 family=gaussian())
 ds$add(des2)
 #report the size of the design
 ds$n()
@@ -442,7 +449,11 @@ the variance from this design, and the total number of function evaluations. Opt
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{df <- nelder(~(cl(6)*t(5)) > ind(5))
+\preformatted{\dontshow{
+glmmrBase::setParallel(FALSE) # for the CRAN check
+setParallelOptim(FALSE)
+}
+df <- nelder(~(cl(6)*t(5)) > ind(5))
 df$int <- 0
 df[df$t >= df$cl, 'int'] <- 1
 des <- Model$new(
@@ -456,9 +467,8 @@ des <- Model$new(
 )
 ds <- DesignSpace$new(des)
 
-#find the optimal design of size 30 individuals using local search
-opt <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=1)
 #find the optimal design of size 30 individuals using reverse greedy search
+# change algo=1 for local search, and algo = 2 for greedy search
 opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
 
 #let the experimental condition be the cluster
@@ -479,7 +489,7 @@ des2$covariance <- Covariance$new(
 )
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
-opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)))
+opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=1))
 }
 \if{html}{\out{</div>}}
 
