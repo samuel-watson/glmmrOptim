@@ -26,7 +26,6 @@ Rcpp::List GradRobustStep(Rcpp::List C_list,
   Eigen::ArrayXi max_obs_ = as<Eigen::ArrayXi>(max_obs);
   Eigen::VectorXd weights_ = as<Eigen::VectorXd>(weights);
   Eigen::ArrayXi exp_cond_ = as<Eigen::ArrayXi>(exp_cond);
-  int ndesign = weights_.size();
   glmmr::OptimData data(C_list,X_list,Z_list,D_list,w_diag_,V0_list,max_obs_,weights_,exp_cond_);
   Eigen::ArrayXi idx_in_ = as<Eigen::ArrayXi>(idx_in);
   Eigen::ArrayXi type_ = as<Eigen::ArrayXi>(type);

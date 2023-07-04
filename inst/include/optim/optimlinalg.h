@@ -12,7 +12,6 @@ namespace algo {
 inline Eigen::MatrixXd remove_one_many_mat(const Eigen::MatrixXd &A, 
                                            const Eigen::ArrayXi &i) {
   
-  int n = A.rows();
   Eigen::ArrayXi isort = i;
   std::sort(isort.data(),isort.data()+isort.size(), std::greater<int>());
   Eigen::MatrixXd A2 = A;

@@ -168,8 +168,6 @@ inline void glmmr::OptimDesign::local_search(){
   if (trace_) Rcpp::Rcout << "\nLOCAL SEARCH";
   int i = 0;
   double diff = -1.0;
-  double tmp;
-  
   while(diff < 0){
     i++;
     val_ = new_val_;
@@ -186,8 +184,8 @@ inline void glmmr::OptimDesign::local_search(){
     double newval = val_swap.minCoeff(&minrow,&mincol);
     diff = newval - val_;
     if (trace_) Rcpp::Rcout << " || Best Difference: " << diff << " Best New value: " << newval;
-    
     if(diff < 0){
+      double tmp;
       if(uncorr_){
         tmp = rm_obs_uncor(1+(int)minrow,true);
         new_val_ = add_obs_uncor(1+(int)mincol,true,true);
@@ -195,6 +193,7 @@ inline void glmmr::OptimDesign::local_search(){
         tmp = rm_obs(1+(int)minrow,true);
         new_val_ = add_obs(1+(int)mincol,true,true);
       }
+      (void)tmp;
     } else {
       if (trace_) Rcpp::Rcout << "\nFINISHED LOCAL SEARCH";
     }
@@ -216,6 +215,7 @@ inline void glmmr::OptimDesign::greedy_search(){
     ArrayXd val_swap = eval(false);
     Index swap_sort;
     double min = val_swap.minCoeff(&swap_sort);
+    (void)min;
     if (trace_) Rcpp::Rcout << " adding " << swap_sort+1;
     if(uncorr_){
       new_val_ = add_obs_uncor((int)swap_sort+1,false,true);
@@ -250,6 +250,7 @@ inline void glmmr::OptimDesign::reverse_greedy_search(){
     }
     Index swap_sort;
     double min = val_rm.minCoeff(&swap_sort);
+    (void)min;
     if (trace_) Rcpp::Rcout << " removing " << swap_sort+1;
     if(uncorr_){
       new_val_ = rm_obs_uncor((int)swap_sort+1,true,true,true);
@@ -511,13 +512,14 @@ inline double glmmr::OptimDesign::add_obs_uncor(int inobs,
 
 inline ArrayXd glmmr::OptimDesign::eval(bool userm, int obs){
   ArrayXd val_in_mat = ArrayXd::Constant(k_,10000);
-  double tmp;
   if(userm){
+    double tmp;
     if(uncorr_){
       tmp = rm_obs_uncor(obs);
     } else {
       tmp = rm_obs(obs);
     }
+    (void)tmp;
 #pragma omp parallel for
     for (int i = 1; i < k_+1; ++i) {
       if(obs != i && curr_obs_(i-1)<data_.max_obs_(i-1)){
