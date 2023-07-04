@@ -258,7 +258,9 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' )
                    #' ds <- DesignSpace$new(des,des2)
                    #' #weighted average assuming equal weights using local search
-                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=1))
+                   #' \donttest{
+                   #' opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),algo=1)
+                   #' }
                    optimal = function(m,
                                       C,
                                       attenuate_pars = FALSE,

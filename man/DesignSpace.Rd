@@ -179,7 +179,9 @@ des2$covariance <- Covariance$new(
 )
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
-opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=1))
+\donttest{
+opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),algo=1)
+}
 
 ## ------------------------------------------------
 ## Method `DesignSpace$show`
@@ -489,7 +491,9 @@ des2$covariance <- Covariance$new(
 )
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
-opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1),algo=1))
+\donttest{
+opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),algo=1)
+}
 }
 \if{html}{\out{</div>}}
 
