@@ -212,6 +212,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' algorithm will be used, otherwise if it is FALSE, then a fast approximate alternative will be used. See Details
                    #' @param robust_log Logical. If TRUE and there are multiple designs in the design space then the robust criterion will be a sum of the log
                    #' of the c-optimality criterion weighted by the study weights, and if FALSE then it will be a weighted sum of the absolute value.
+                   #' @param kr Logical. Whether to use the Kenwood-Roger small sample bias corrected variance matrix for the fixed effect parameters.
                    #' @param p Positive integer specifying the size of the starting design for the greedy algorithm
                    #' @return A named list. If using the weighting method then the list contains the optimal experimental weights and a 
                    #' list of exact designs of size `m`, see \link[glmmrOptim]{apportion}. If using a combinatorial algorithm then 
@@ -271,6 +272,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                                       algo = c(1),
                                       use_combin=FALSE,
                                       robust_log = FALSE,
+                                      kr = FALSE,
                                       p){
                      if(keep&verbose)message("linked design objects will be overwritten with the new design")
                      if(length(C)!=self$n()[[1]])stop("C not equal to number of designs")
@@ -479,23 +481,49 @@ each condition will be reported below."))
                          }
                        }
                        
-                       out_list <- GradRobustStep(C_list = C_list, 
-                                                  X_list = X_list,
-                                                  Z_list = Z_list,
-                                                  D_list = D_list,
-                                                  w_diag = w_diag,
-                                                  V0_list = V0,
-                                                  max_obs = max_obs,
-                                                  weights = weights, 
-                                                  exp_cond = expcond.id,
-                                                  idx_in = idx_in, 
-                                                  n=m,
-                                                  nmax = N+10,
-                                                  type = algo,
-                                                  robust_log = robust_log,
-                                                  trace=verbose,
-                                                  uncorr=FALSE,
-                                                  bayes=bayes)
+                       # out_list <- GradRobustStep(C_list = C_list, 
+                       #                            X_list = X_list,
+                       #                            Z_list = Z_list,
+                       #                            D_list = D_list,
+                       #                            w_diag = w_diag,
+                       #                            V0_list = V0,
+                       #                            max_obs = max_obs,
+                       #                            weights = weights, 
+                       #                            exp_cond = expcond.id,
+                       #                            idx_in = idx_in, 
+                       #                            n=m,
+                       #                            nmax = N+10,
+                       #                            type = algo,
+                       #                            robust_log = robust_log,
+                       #                            trace=verbose,
+                       #                            uncorr=FALSE,
+                       #                            bayes=bayes)
+                       
+                       ptr <- CreateOptim(C_list = C_list, 
+                                          X_list = X_list,
+                                          Z_list = Z_list,
+                                          D_list = D_list,
+                                          w_diag = w_diag,
+                                          V0_list = V0,
+                                          max_obs = max_obs,
+                                          weights = weights, 
+                                          exp_cond = expcond.id,
+                                          idx_in = idx_in, 
+                                          n=m,
+                                          nmax = N+10,
+                                          robust_log = robust_log,
+                                          trace=verbose,
+                                          kr = kr,
+                                          uncorr=FALSE,
+                                          bayes=bayes)
+                       
+                       if(kr){
+                         for(i in 1:length(private$designs)){
+                           AddDesignDerivatives(dptr_ = ptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
+                         }
+                       }
+                       
+                       out_list <- FindOptimumDesign(dptr_ = ptr,type_ = algo)
                        
                        idx_out <- drop(out_list[["idx_in"]] )
                        idx_out_exp <- sort(idx_out)
