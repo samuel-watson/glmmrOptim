@@ -481,33 +481,37 @@ each condition will be reported below."))
                          }
                        }
                        
-                       # out_list <- GradRobustStep(C_list = C_list, 
-                       #                            X_list = X_list,
-                       #                            Z_list = Z_list,
-                       #                            D_list = D_list,
-                       #                            w_diag = w_diag,
-                       #                            V0_list = V0,
-                       #                            max_obs = max_obs,
-                       #                            weights = weights, 
-                       #                            exp_cond = expcond.id,
-                       #                            idx_in = idx_in, 
-                       #                            n=m,
-                       #                            nmax = N+10,
-                       #                            type = algo,
-                       #                            robust_log = robust_log,
-                       #                            trace=verbose,
-                       #                            uncorr=FALSE,
-                       #                            bayes=bayes)
+                       dataptr <- CreateOptimData(C_list = C_list, 
+                                              X_list = X_list,
+                                              Z_list = Z_list,
+                                              D_list = D_list,
+                                              w_diag = w_diag,
+                                              V0_list = V0,
+                                              max_obs = max_obs,
+                                              weights = weights, 
+                                              exp_cond = expcond.id)
                        
-                       ptr <- CreateOptim(C_list = C_list, 
-                                          X_list = X_list,
-                                          Z_list = Z_list,
-                                          D_list = D_list,
-                                          w_diag = w_diag,
-                                          V0_list = V0,
-                                          max_obs = max_obs,
-                                          weights = weights, 
-                                          exp_cond = expcond.id,
+                       derivptr <- CreateDerivatives()
+                       
+                       datlist <<- list(C_list = C_list, 
+                                        X_list = X_list,
+                                        Z_list = Z_list,
+                                        D_list = D_list,
+                                        w_diag = w_diag,
+                                        V0_list = V0,
+                                        max_obs = max_obs,
+                                        weights = weights, 
+                                        exp_cond = expcond.id)
+                       
+                       if(kr){
+                         for(i in 1:length(private$designs)){
+                           AddDesignDerivatives(dptr_ = derivptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
+                         }
+                       }
+                       
+                       
+                       ptr <- CreateOptim(dataptr,
+                                          derivptr,
                                           idx_in = idx_in, 
                                           n=m,
                                           nmax = N+10,
@@ -517,11 +521,14 @@ each condition will be reported below."))
                                           uncorr=FALSE,
                                           bayes=bayes)
                        
-                       if(kr){
-                         for(i in 1:length(private$designs)){
-                           AddDesignDerivatives(dptr_ = ptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
-                         }
-                       }
+                       optimlist <<- list(idx_in = idx_in, 
+                                          n=m,
+                                          nmax = N+10,
+                                          robust_log = robust_log,
+                                          trace=verbose,
+                                          kr = kr,
+                                          uncorr=FALSE,
+                                          bayes=bayes)
                        
                        out_list <- FindOptimumDesign(dptr_ = ptr,type_ = algo)
                        

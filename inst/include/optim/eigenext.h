@@ -8,7 +8,7 @@
 // index code from http://eigen.tuxfamily.org/dox/TopicCustomizing_NullaryExpr.html#title1
 
 namespace glmmr {
-namespace Eigen_ext {
+namespace OptimEigen {
 
 template<typename Func>
 struct lambda_as_visitor_wrapper : Func {
@@ -26,11 +26,11 @@ inline void visit_lambda(const Mat& m, const Func& f)
 
 inline Eigen::ArrayXi find(Eigen::ArrayXi vec, int n){
   std::vector<int> indices;
-  glmmr::Eigen_ext::visit_lambda(vec,
-                      [&indices,n](int v, int i, int j) {
-                        if(v == n)
-                          indices.push_back(i);
-                      });
+  glmmr::OptimEigen::visit_lambda(vec,
+                                 [&indices,n](int v, int i, int j) {
+                                   if(v == n)
+                                     indices.push_back(i);
+                                 });
   return Eigen::Map<Eigen::ArrayXi>(indices.data(),indices.size());
 }
 
@@ -65,14 +65,13 @@ mat_indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indi
   return MatrixType::NullaryExpr(row_indices.size(), col_indices.size(), Func(arg.derived(), row_indices, col_indices));
 }
 
-inline bool issympd(Eigen::MatrixXd mat){
+inline bool isnotsympd(Eigen::MatrixXd mat){
   Eigen::LLT<Eigen::MatrixXd> lltOfA(mat);
   return lltOfA.info() == Eigen::NumericalIssue;
 }
 
+
 }
 }
-
-
 
 #endif

@@ -1,5 +1,5 @@
-#include "glmmrOptim.h"
 #include <glmmr.h>
+#include "glmmrOptim.h"
 
 // [[Rcpp::depends(RcppEigen)]]
 
@@ -51,15 +51,26 @@ using namespace Rcpp;
 // }
 
 // [[Rcpp::export]]
-SEXP CreateOptim(Rcpp::List C_list, 
-                          Rcpp::List X_list, 
-                          Rcpp::List Z_list, 
-                          Rcpp::List D_list, 
-                          SEXP w_diag,
-                          Rcpp::List V0_list,
-                          SEXP max_obs,
-                          SEXP weights,
-                          SEXP exp_cond,
+SEXP CreateOptimData(Rcpp::List C_list, 
+                     Rcpp::List X_list, 
+                     Rcpp::List Z_list, 
+                     Rcpp::List D_list, 
+                     SEXP w_diag,
+                     Rcpp::List V0_list,
+                     SEXP max_obs,
+                     SEXP weights,
+                     SEXP exp_cond){
+  Eigen::MatrixXd w_diag_ = as<Eigen::MatrixXd>(w_diag);
+  Eigen::ArrayXi max_obs_ = as<Eigen::ArrayXi>(max_obs);
+  Eigen::VectorXd weights_ = as<Eigen::VectorXd>(weights);
+  Eigen::ArrayXi exp_cond_ = as<Eigen::ArrayXi>(exp_cond);
+  XPtr<glmmr::OptimData> ptr(new glmmr::OptimData(C_list,X_list,Z_list,D_list,w_diag_,V0_list,max_obs_,weights_,exp_cond_),true);
+  return ptr;
+}
+
+// [[Rcpp::export]]
+SEXP CreateOptim(SEXP dataptr,
+                 SEXP derivptr,
                           SEXP idx_in,  
                           int n,
                           int nmax,
@@ -68,14 +79,16 @@ SEXP CreateOptim(Rcpp::List C_list,
                           bool kr = false,
                           bool uncorr = false,
                           bool bayes = false) {
-  Eigen::MatrixXd w_diag_ = as<Eigen::MatrixXd>(w_diag);
-  Eigen::ArrayXi max_obs_ = as<Eigen::ArrayXi>(max_obs);
-  Eigen::VectorXd weights_ = as<Eigen::VectorXd>(weights);
-  Eigen::ArrayXi exp_cond_ = as<Eigen::ArrayXi>(exp_cond);
-  glmmr::OptimData data(C_list,X_list,Z_list,D_list,w_diag_,V0_list,max_obs_,weights_,exp_cond_);
   Eigen::ArrayXi idx_in_ = as<Eigen::ArrayXi>(idx_in);
-  Eigen::ArrayXi type_ = as<Eigen::ArrayXi>(type);
-  XPtr<glmmr::OptimDesign> ptr(new glmmr::OptimDesign(idx_in_, n,data,nmax,robust_log, trace, uncorr, kr, bayes),true);
+  XPtr<glmmr::OptimData> dptr(dataptr);
+  XPtr<glmmr::OptimDerivatives> pptr(derivptr);
+  XPtr<glmmr::OptimDesign> ptr(new glmmr::OptimDesign(idx_in_, n,*dptr,*pptr,nmax,robust_log, trace, uncorr, kr, bayes),true);
+  return ptr;
+}
+
+// [[Rcpp::export]]
+SEXP CreateDerivatives(){
+  XPtr<glmmr::OptimDerivatives> ptr(new glmmr::OptimDerivatives(),true);
   return ptr;
 }
 
@@ -105,7 +118,7 @@ Rcpp::List FindOptimumDesign(SEXP dptr_,SEXP type_){
 
 // [[Rcpp::export]]
 void AddDesignDerivatives(SEXP dptr_, SEXP mptr_){
-  XPtr<glmmr::OptimDesign> dptr(dptr_);
+  XPtr<glmmr::OptimDerivatives> dptr(dptr_);
   XPtr<glmmr::ModelBits> mptr(mptr_);
-  dptr->derivs_.addDesign(*mptr);
+  dptr->addDesign(*mptr);
 }

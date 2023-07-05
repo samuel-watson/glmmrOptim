@@ -14,7 +14,7 @@ class MatrixField{
     std::vector<std::unique_ptr<T> > data;
     
     MatrixField(int n){
-      data.reserve(n);
+      data.resize(n);
     };
     
     MatrixField(){};

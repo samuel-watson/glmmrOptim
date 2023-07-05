@@ -3,7 +3,6 @@
 
 #include <cmath> 
 #include <RcppEigen.h>
-#include "optimmaths.h"
 
 namespace glmmr {
 namespace algo {
@@ -59,7 +58,7 @@ inline double remove_one_many(const Eigen::MatrixXd &A,
       iter++;
     }
   }
-  return glmmr::maths::obj_fun(A2, u2);
+  return u2.transpose()*A2 * u2;
 }
 
 
@@ -89,8 +88,7 @@ inline double add_one(const Eigen::MatrixXd &A,
                       const Eigen::VectorXd &u) {
   
   Eigen::MatrixXd A2 = glmmr::algo::add_one_mat(A,sigma_jj,f);
-  
-  return glmmr::maths::obj_fun(A2, u);
+  return u.transpose()*A2*u;
 }
 
 inline Eigen::ArrayXi uvec_minus(const Eigen::ArrayXi &v, 
