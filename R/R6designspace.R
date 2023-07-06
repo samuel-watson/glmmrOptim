@@ -480,7 +480,6 @@ each condition will be reported below."))
                            V0[[i]] <- matrix(1)
                          }
                        }
-                       
                        dataptr <- CreateOptimData(C_list = C_list, 
                                               X_list = X_list,
                                               Z_list = Z_list,
@@ -490,26 +489,12 @@ each condition will be reported below."))
                                               max_obs = max_obs,
                                               weights = weights, 
                                               exp_cond = expcond.id)
-                       
                        derivptr <- CreateDerivatives()
-                       
-                       datlist <<- list(C_list = C_list, 
-                                        X_list = X_list,
-                                        Z_list = Z_list,
-                                        D_list = D_list,
-                                        w_diag = w_diag,
-                                        V0_list = V0,
-                                        max_obs = max_obs,
-                                        weights = weights, 
-                                        exp_cond = expcond.id)
-                       
                        if(kr){
                          for(i in 1:length(private$designs)){
                            AddDesignDerivatives(dptr_ = derivptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
                          }
                        }
-                       
-                       
                        ptr <- CreateOptim(dataptr,
                                           derivptr,
                                           idx_in = idx_in, 
@@ -521,17 +506,7 @@ each condition will be reported below."))
                                           uncorr=FALSE,
                                           bayes=bayes)
                        
-                       optimlist <<- list(idx_in = idx_in, 
-                                          n=m,
-                                          nmax = N+10,
-                                          robust_log = robust_log,
-                                          trace=verbose,
-                                          kr = kr,
-                                          uncorr=FALSE,
-                                          bayes=bayes)
-                       
                        out_list <- FindOptimumDesign(dptr_ = ptr,type_ = algo)
-                       
                        idx_out <- drop(out_list[["idx_in"]] )
                        idx_out_exp <- sort(idx_out)
                        rows_in <- c()

@@ -95,7 +95,7 @@ public:
   void local_search();
   void greedy_search();
   void reverse_greedy_search();
-  MatrixXd KR_correction(const MatrixXd& M,const int& idx,const MatrixXd& X,const MatrixXd& Z,const MatrixXd& Sinv,const ArrayXi& indexes);
+  MatrixXd KR_correction(const MatrixXd& M,const int& idx,const MatrixXd& X,const MatrixXd& Sinv,const ArrayXi& indexes);
   double c_obj_fun(const MatrixXd &M,const VectorXd &C);
   
 private:
@@ -122,16 +122,13 @@ inline ArrayXi glmmr::OptimDesign::join_idx(const ArrayXi &idx,
 inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
                                               const int& idx,
                                               const MatrixXd& X,
-                                              const MatrixXd& Z,
                                               const MatrixXd& Sinv,
                                               const ArrayXi& indexes){
-  Rcpp::Rcout << "\n n: " << X.rows() << " index size: " << indexes.size();
-  Rcpp::Rcout << "\n indexes: \n" << indexes;
   if(idx>=derivs_.FirstOrderDerivatives.size() )Rcpp::stop("idx out of range");
   int n = X.rows();
   if(n != indexes.size())Rcpp::stop("indexes not equal to X array extent");
   int R = derivs_.FirstOrderDerivatives[idx].size();
-  int Rmod = derivs_.gaussian[idx] == 1 ? R : R-1;
+  int Rmod = derivs_.gaussian[idx] == 1 ? R-1 : R;
   MatrixXd M_new(M);
   MatrixXd SigX = Sinv*X;
   MatrixXd middle = MatrixXd::Identity(n,n) - X*M*SigX.transpose();
@@ -139,39 +136,35 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
   MatrixXd partial1(n,n);
   MatrixXd partial2(n,n);
   MatrixXd partial3(n,n);
-  partial1 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](0),indexes,indexes);
-  Rcpp::Rcout << "\nM theta: " << partial1.topLeftCorner(10,10);
-  // for(int i = 0; i < R; i++){
-  //   partial1 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](i),indexes,indexes);
-  //   for(int j = i; j < R; j++){
-  //     partial2 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](j),indexes,indexes);
-  //     M_theta(i,j) = (Sinv*partial1*Sinv*partial2).trace();
-  //     M_theta(i,j) -= (M*SigX.transpose()*partial1*Sinv*(middle+MatrixXd::Identity(n,n))*partial2*SigX).trace();
-  //     M_theta(i,j) *= 0.5;
-  //     if(i!=j)M_theta(j,i)=M_theta(i,j);
-  //   }
-  // }
-  
+  for(int i = 0; i < R; i++){
+    partial1 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](i),indexes,indexes);
+    for(int j = i; j < R; j++){
+      partial2 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](j),indexes,indexes);
+      M_theta(i,j) = (Sinv*partial1*Sinv*partial2).trace();
+      M_theta(i,j) -= (M*SigX.transpose()*partial1*Sinv*(middle+MatrixXd::Identity(n,n))*partial2*SigX).trace();
+      M_theta(i,j) *= 0.5;
+      if(i!=j)M_theta(j,i)=M_theta(i,j);
+    }
+  }
+  M_theta = M_theta.llt().solve(MatrixXd::Identity(R,R));
+  MatrixXd meat = MatrixXd::Zero(X.cols(),X.cols());
+  for(int i = 0; i < R; i++){
+    for(int j = 0; j < R; j++){
+      partial1 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](i),indexes,indexes);
+      partial2 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](j),indexes,indexes);
+      meat += M_theta(i,j)*SigX.transpose()*partial1*Sinv*middle*partial2*SigX;
+      if(i < Rmod && j < Rmod){
+        int scnd_idx = i <= j ? i + j*(Rmod-1) - j*(j-1)/2 : j + i*(Rmod-1) - i*(i-1)/2;
+        partial3 = glmmr::OptimEigen::mat_indexing(derivs_.SecondOrderDerivatives[idx](scnd_idx),indexes,indexes);
+        meat -= M_theta(i,j)*0.25*SigX.transpose()*partial3*SigX;
+      }
+      // if(i==Rmod && j==Rmod){
+      //   meat -= M_theta(i,j)*0.5*SigX.transpose()*SigX;
+      // }
+    }
+  }
+  M_new += 2*M*meat*M;
   return M_new;
-  // M_theta = M_theta.llt().solve(MatrixXd::Identity(R,R));
-  // MatrixXd meat = MatrixXd::Zero(X.cols(),X.cols());
-  // for(int i = 0; i < R; i++){
-  //   for(int j = 0; j < R; j++){
-  //     int scnd_idx = i <= j ? i + j*(Rmod-1) - j*(j-1)/2 : j + i*(Rmod-1) - i*(i-1)/2;
-  //     partial1 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](i),indexes,indexes);
-  //     partial2 = glmmr::OptimEigen::mat_indexing(derivs_.FirstOrderDerivatives[idx](j),indexes,indexes);
-  //     meat += M_theta(i,j)*SigX.transpose()*partial1*Sinv*middle*partial2*SigX;
-  //     if(i < Rmod && j < Rmod){
-  //       partial3 = glmmr::OptimEigen::mat_indexing(derivs_.SecondOrderDerivatives[idx](scnd_idx),indexes,indexes);
-  //       meat -= M_theta(i,j)*0.25*SigX.transpose()*Z*partial3*Z.transpose()*SigX;
-  //     }
-  //     // if(i==Rmod && j==Rmod){
-  //     //   meat -= M_theta(i,j)*0.5*SigX.transpose()*SigX;
-  //     // }
-  //   }
-  // }
-  // M_new += 2*M*meat*M;
-  // return M_new;
 }
 
 inline void glmmr::OptimDesign::build_XZ(){
@@ -222,7 +215,7 @@ inline void glmmr::OptimDesign::build_XZ(){
     }
     M = M.llt().solve(MatrixXd::Identity(M.rows(),M.cols()));
     if(kr_){
-      M = KR_correction(M,j,X.topRows(rowcount),Z.topRows(rowcount),tmp,Map<ArrayXi,Unaligned>(starting_rows.data(),starting_rows.size()));
+      M = KR_correction(M,j,X.topRows(rowcount),tmp,Map<ArrayXi,Unaligned>(starting_rows.data(),starting_rows.size()));
     }
     M_list_.add(M);
     M_list_sub_.add(M);
@@ -386,14 +379,15 @@ inline double glmmr::OptimDesign::rm_obs(int outobs,
     if(bayes_){
       M += data_.V0_list_(idx);
     }
-    M = M.llt().solve(MatrixXd::Identity(M.rows(),M.cols()));
-    if(kr_){
-      int q = data_.Z_all_list_.cols(idx);
-      MatrixXd Z = glmmr::OptimEigen::mat_indexing(data_.Z_all_list_(idx),idxexist,ArrayXi::LinSpaced(q,0,q-1));
-      M = KR_correction(M,idx,X,Z,rm1A,idxexist);
+    bool issympd = glmmr::OptimEigen::isnotsympd(M);
+    if(!issympd){
+      M = M.llt().solve(MatrixXd::Identity(M.rows(),M.cols()));
+      if(kr_){
+        M = KR_correction(M,idx,X,rm1A,idxexist);
+      }
+      M_list_sub_.replace(idx,M);
+      if(rtn_val)vals(idx) = c_obj_fun( M, data_.C_list_(idx));
     }
-    M_list_sub_.replace(idx,M);
-    if(rtn_val)vals(idx) = c_obj_fun( M, data_.C_list_(idx));
     if(keep_mat){
       M_list_.replace(idx,M);
       A_list_.block(idx*nmax_,0,r_in_rm_,r_in_rm_) = rm1A;
@@ -444,8 +438,6 @@ inline double glmmr::OptimDesign::rm_obs_uncor(int outobs,
     M.noalias() -= X.transpose()*tmp*X;
     M_list_sub_.replace(j,M);
     if(rtn_val)vals(j) = bayes_ ? c_obj_fun( M+data_.V0_list_(j), data_.C_list_(j)) : c_obj_fun( M, data_.C_list_(j));
-    
-    
     if(keep_mat){
       M_list_.replace(j,M);
     }
@@ -513,9 +505,7 @@ inline double glmmr::OptimDesign::add_obs(int inobs,
     if(!issympd){
       M = M.llt().solve(MatrixXd::Identity(M.rows(),M.cols()));
       if(kr_){
-        int q = data_.Z_all_list_.cols(idx);
-        MatrixXd Z = glmmr::OptimEigen::mat_indexing(data_.Z_all_list_(idx),idx_in_vec,ArrayXi::LinSpaced(q,0,q-1));
-        M = KR_correction(M,idx,X,Z,A,idx_in_vec);
+        M = KR_correction(M,idx,X,A,idx_in_vec);
       }
       if(keep){
         if(idx==0)r_in_design_ = A.rows();
