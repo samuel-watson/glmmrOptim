@@ -2,7 +2,7 @@ Package: glmmrOptim
 Type: Package
 Title: Approximate Optimal Experimental Designs Using Generalised Linear Mixed Models
 Version: 0.3.1
-Date: 2023-07-03
+Date: 2023-07-07
 Authors@R: c(person("Sam", "Watson", email = "S.I.Watson@bham.ac.uk",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
@@ -22,7 +22,8 @@ Imports:
 LinkingTo: 
     Rcpp (>= 1.0.7),
     RcppEigen,
-    glmmrBase (>= 0.2.5),
+    RcppProgress,
+    glmmrBase (>= 0.4.5),
     SparseChol (>= 0.2.1),
     BH,
     rminqa (>= 0.2.2)

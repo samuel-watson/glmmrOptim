@@ -25,24 +25,16 @@ public:
     int R = model.covariance.npar();
     gaussian.push_back((int)(model.family.family == "gaussian"));
     for(int i = 0; i < R; i++){
-      first.add(model.covariance.Z()*derivs[1+i]*model.covariance.Z().transpose());
-    }
-    if(gaussian[curr_size]){
-      first.add(model.data.variance.matrix().asDiagonal()*MatrixXd::Identity(model.n(),model.n()));
+      first.add(derivs[1+i]);
     }
     FirstOrderDerivatives.push_back(first);
-    
     for(int i = 0; i < R; i++){
       for(int j = i; j < R; j++){
         int scnd_idx = i + j*(R-1) - j*(j-1)/2;
-        second.add(model.covariance.Z()*derivs[R+1+scnd_idx]*model.covariance.Z().transpose());
+        second.add(derivs[R+1+scnd_idx]);
       }
     }
     SecondOrderDerivatives.push_back(second);
-    // Rcpp::Rcout << "\nField size: " << FirstOrderDerivatives[0].size();
-    // Rcpp::Rcout << "\n2 Field size: " << SecondOrderDerivatives[0].size();
-    // Rcpp::Rcout << "\nMat 1 size: " << FirstOrderDerivatives[0].rows(0) << " x " << FirstOrderDerivatives[0].cols(0);
-    // Rcpp::Rcout << "\nMat1: " << FirstOrderDerivatives[0](0);
   };
 };
 

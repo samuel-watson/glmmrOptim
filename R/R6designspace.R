@@ -445,9 +445,9 @@ each condition will be reported below."))
                            }
                          } else {
                            if(is.null(rm_cols)){
-                             w_diag[,i] <- Matrix::drop(private$designs[[i]]$w_matrix())[idx.nodup]
+                             w_diag[,i] <- 1/Matrix::drop(private$designs[[i]]$w_matrix())[idx.nodup]
                            } else {
-                             w_diag[,i] <- Matrix::drop(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
+                             w_diag[,i] <- 1/Matrix::drop(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
                            }
                          }
                        }
