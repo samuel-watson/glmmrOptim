@@ -161,7 +161,7 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
       }
       S.add(PG*partial1*PG*partial2);
       Q.add(X.transpose()*Sinv*partial1*Sinv*partial2*SigX);
-      //counter++;
+      // counter++;
       if(i < R && j < R){
         int scnd_idx = i + j*(R-1) - j*(j-1)/2;
         if(scnd_idx >= derivs_.SecondOrderDerivatives[idx].size())Rcpp::stop("scnd > SoD s");
@@ -169,9 +169,10 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
       }
     }
   }
-  //counter = 0;
+  counter = 0;
   for(int i = 0; i < Rmod; i++){
     for(int j = i; j < Rmod; j++){
+      // using the expected REML information matrix here, but can use alternative commented out
       M_theta(i,j) = 0.5*(S(counter).trace()); //- (M*Q(counter)).trace() + 0.5*((M*P(i)*M*P(j)).trace());
       if(i!=j)M_theta(j,i)=M_theta(i,j);
       counter++;
@@ -179,9 +180,20 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
   }
   M_theta = M_theta.llt().solve(MatrixXd::Identity(Rmod,Rmod));
   for(int i = 0; i < (Rmod-1); i++){
+    if(i < R){
+      partial1 = Z*derivs_.FirstOrderDerivatives[idx](i)*Z.transpose();
+    } else {
+      partial1 = MatrixXd::Identity(n,n);
+    }
     for(int j = (i+1); j < Rmod; j++){
+      if(j < R){
+        partial2 = Z*derivs_.FirstOrderDerivatives[idx](j)*Z.transpose();
+      } else {
+        partial2 = MatrixXd::Identity(n,n);
+      }
       int scnd_idx = i + j*(Rmod-1) - j*(j-1)/2;
-      meat += M_theta(i,j)*(Q(scnd_idx) + Q(scnd_idx).transpose() - P(i)*M*P(j) -P(j)*M*P(i));
+      meat += M_theta(i,j)*(SigX.transpose()*partial1*PG*partial2*SigX);//(Q(scnd_idx) + Q(scnd_idx).transpose() - P(i)*M*P(j) -P(j)*M*P(i));
+      meat += M_theta(i,j)*(SigX.transpose()*partial2*PG*partial1*SigX);
       if(i < R && j < R){
         scnd_idx = i + j*(R-1) - j*(j-1)/2;
         meat -= 0.5*M_theta(i,j)*(RR(scnd_idx));
@@ -189,13 +201,23 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
     }
   }
   for(int i = 0; i < Rmod; i++){
+    if(i < R){
+      partial1 = Z*derivs_.FirstOrderDerivatives[idx](i)*Z.transpose();
+    } else {
+      partial1 = MatrixXd::Identity(n,n);
+    }
     int scnd_idx = i + i*(Rmod-1) - i*(i-1)/2;
-    meat += M_theta(i,i)*(Q(scnd_idx) - P(i)*M*P(i));
+    meat += M_theta(i,i)*(SigX.transpose()*partial1*PG*partial1*SigX); //(Q(scnd_idx) - P(i)*M*P(i));
     if(i < R){
       scnd_idx = i + i*(R-1) - i*(i-1)/2;
       meat -= 0.25*M_theta(i,i)*RR(scnd_idx);
     }
   }
+  // use for debug
+  // Rcpp::Rcout << "\nM theta: \n" << M_theta;
+  // Rcpp::Rcout << "\nM: \n" << M;
+  // Rcpp::Rcout << "\nMeat: \n" << meat;
+  // Rcpp::Rcout << "\nCorrection: \n" << M*meat*M;
   M_new = M + 2*M*meat*M;
   return M_new;
 }

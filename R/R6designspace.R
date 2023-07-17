@@ -213,7 +213,9 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' @param robust_log Logical. If TRUE and there are multiple designs in the design space then the robust criterion will be a sum of the log
                    #' of the c-optimality criterion weighted by the study weights, and if FALSE then it will be a weighted sum of the absolute value.
                    #' @param kr Logical. Whether to use the Kenwood-Roger small sample bias corrected variance matrix for the fixed effect parameters.
-                   #' @param p Positive integer specifying the size of the starting design for the greedy algorithm
+                   #' @param p Optional. Positive integer specifying the size of the starting design for the greedy algorithm
+                   #' @param N Optional. Integer. If using the Girling algorithm, then this is the total sample size. If not provided then the sample 
+                   #' size is taken from the size of the design.
                    #' @return A named list. If using the weighting method then the list contains the optimal experimental weights and a 
                    #' list of exact designs of size `m`, see \link[glmmrOptim]{apportion}. If using a combinatorial algorithm then 
                    #' the list contains the rows in the optimal design, the indexes of the experimental conditions in the optimal design,
@@ -273,22 +275,34 @@ DesignSpace <- R6::R6Class("DesignSpace",
                                       use_combin=FALSE,
                                       robust_log = FALSE,
                                       kr = FALSE,
-                                      p){
+                                      p,
+                                      N){
+                     #checks and balances
                      if(keep&verbose)message("linked design objects will be overwritten with the new design")
-                     if(length(C)!=self$n()[[1]])stop("C not equal to number of designs")
                      if(!is.null(V0) & length(V0)!=self$n()[[1]])stop("V0 not equal to number of designs")
-                     ## add checks
-                     if(any(!algo%in%1:3))stop("Algorithm(s) must be a combination of 1, 2, and 3")
+                     if(is(C,"list")){
+                       if(length(C)!=self$n()[[1]])stop("C not equal to number of designs")
+                       for(i in 1:length(C)){
+                         if(length(C[[i]]) != ncol(private$designs[[i]]$mean$X))stop("C wrong length")
+                       }
+                     } else if(is(C,"numeric")){
+                       if(self$n()[[1]]>1)stop("C not equal to number of designs")
+                       if(length(C) != ncol(private$designs[[i]]$mean$X))stop("C wrong length")
+                     }
+                     
+                     if(is(algo,"character") && algo!="girling")stop("Unrecognised algorithm")
+                     if(is(algo,"character") && algo=="girling" && self$n()[[1]] > 1)stop("Girling algorithm only available for single design space.")
+                     if(is(algo,"numeric") && any(!algo%in%1:3))stop("Combinatorial algorithm(s) must be a combination of 1, 2, and 3")
                      
                      ## update designs if attenuated parameters
                      if(attenuate_pars & packageVersion('glmmrBase') < '0.2.5'){
-                       warning("Linear predictor attenuation requires glmmrBase version 0.2.6 or higher. To install the latest version use 
-                               devtools::install_github('samuel-watson/glmmrBase')")
+                       warning("Linear predictor attenuation requires glmmrBase version 0.2.6 or higher.")
                      } else {
                        for(i in 1:self$n()[[1]]){
                          private$designs[[i]]$use_attenuation(attenuate_pars)
                        }
                      }
+                     
                      # dispatch to correct algorithm
                      # check if the experimental conditions are correlated or not
                      #loop through each sigma
@@ -341,6 +355,7 @@ each condition will be reported below."))
                        }
                      }
                      
+                     # make C a list
                      if(!is(C,"list")){
                        C_list <- list()
                        for(i in 1:self$n()[[1]]){
@@ -350,10 +365,13 @@ each condition will be reported below."))
                        C_list <- C
                      }
                      
+                     # message user about algorithm
                      if(verbose&uncorr&!use_combin)message("Experimental conditions uncorrelated, using second-order cone program")
-                     if(verbose&uncorr&use_combin)message("Experimental conditions uncorrelated, but using hill climbing algorithm")
-                     if(verbose&!uncorr)message("Experimental conditions correlated, using combinatorial search algorithms")
+                     if(verbose&uncorr&use_combin)message("Experimental conditions uncorrelated, but using combinatorial algorithm")
+                     if(verbose&!uncorr& is(algo,"numeric"))message("Experimental conditions correlated, using combinatorial search algorithms")
+                     if(verbose&!uncorr& is(algo,"character"))message("Experimental conditions correlated, using Girling algorithm")
                      
+                     # first is the second order cone program
                      if(uncorr&!use_combin){
                        # this returns the experimental designs to keep
                        if(self$n()[1] > 1)stop("An approximate weighting method is not currently available with a robust criterion. Please use combinatorial algorithms.")
@@ -362,7 +380,7 @@ each condition will be reported below."))
                        if(verbose)cat("Weights for each experimental condition in the optimal design:\n", idx_out)
                        if(any(duplicated(datahashes))){
                          agg_weights <- aggregate(idx_out,list(datahashes),sum)
-                         cat("\nSum of weights for unique experimental conditions:\n",agg_weights$x)
+                         if(verbose)cat("\nSum of weights for unique experimental conditions:\n",agg_weights$x)
                          idx_out <- list(weights = idx_out, unique_weights = agg_weights$x)
                          outlist <- list(weights = idx_out,
                                          designs = apportion(idx_out$unique_weights,m))
@@ -373,12 +391,15 @@ each condition will be reported below."))
                        
                        return(invisible(outlist))
                      } else {
+                       # combinatorial or girling algorithm
                        #initialise from random starting index
                        if(packageVersion('glmmrBase') < '0.3.0'){
                          N <- private$designs[[1]]$mean_function$n()
                        } else {
                          N <- private$designs[[1]]$mean$n()
                        }
+                       # set up all the data into the correct format
+                       # in future versions, I will refactor this so that it just takes a model pointer and does it all in the C++ class
                        X_list <- private$genXlist()
                        Z_list <- private$genZlist()
                        D_list <- private$genDlist()
@@ -426,117 +447,154 @@ each condition will be reported below."))
                        ridx.nodup <- which(!duplicated(row.hash))
                        idx.nodup <- which(expcond %in% unique(expcond)[ridx.nodup])
                        n.uni.obs <- length(idx.nodup)
-                       w_diag <- matrix(0,ncol=length(X_list),nrow=n.uni.obs)
-                       for(i in 1:length(X_list)){
-                         X_list[[i]] <- X_list[[i]][idx.nodup,]
-                         Z_list[[i]] <- Z_list[[i]][idx.nodup,]
-                         if(packageVersion('glmmrBase') < '0.3.0'){
-                           message("Use of this package with glmmrBase <0.3.0 will be prevented in the near future.")
-                           if(is.null(rm_cols)){
-                             w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[idx.nodup]
-                           } else {
-                             w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[-zero_idx][idx.nodup]
-                           }
-                         } else if(packageVersion('glmmrBase') < '0.4.2'){
-                           if(is.null(rm_cols)){
-                             w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[idx.nodup]
-                           } else {
-                             w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
-                           }
-                         } else {
-                           if(is.null(rm_cols)){
-                             w_diag[,i] <- 1/Matrix::drop(private$designs[[i]]$w_matrix())[idx.nodup]
-                           } else {
-                             w_diag[,i] <- 1/Matrix::drop(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
-                           }
-                         }
-                       }
-                       max_obs <- unname(table(row.hash))
-                       expcond.id <- as.numeric(factor(expcond[idx.nodup],levels = unique(expcond[idx.nodup])))
-                       if(algo[1]==1){
-                         idx_in <- sort(sample(row.hash,m,replace=FALSE))
-                       } else if(algo[1]==2){
-                         # find a size p design
-                         ispd <- FALSE
-                         #n <- nrow(X_list[[1]])
-                         while(!ispd){
-                           idx_in <- sort(sample(unique(row.hash),p,replace=FALSE))
-                           M <- crossprod(X_list[[1]][expcond.id%in%idx_in,])
-                           cM <- suppressWarnings(tryCatch(chol(M),error=function(e)NULL))
-                           if(!is.null(cM))ispd <- TRUE
-                         }
-                       } else if(algo[1]==3){
-                         idx_in <- row.hash
-                       }
-                       bayes <- FALSE
-                       if(!is.null(V0)){
-                         bayes <- TRUE
-                         for(i in 1:length(X_list)){
-                           if(dim(V0[[i]])[1] != ncol(X_list[[i]]))stop(paste0("V0 wrong dimension for design ",i))
-                         }
-                       } else {
-                         V0 <- list()
-                         for(i in 1:length(X_list)){
-                           V0[[i]] <- matrix(1)
-                         }
-                       }
-                       dataptr <- CreateOptimData(C_list = C_list, 
-                                              X_list = X_list,
-                                              Z_list = Z_list,
-                                              D_list = D_list,
-                                              w_diag = w_diag,
-                                              V0_list = V0,
-                                              max_obs = max_obs,
-                                              weights = weights, 
-                                              exp_cond = expcond.id)
-                       derivptr <- CreateDerivatives()
-                       if(kr){
-                         for(i in 1:length(private$designs)){
-                           AddDesignDerivatives(dptr_ = derivptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
-                         }
-                       }
-                       ptr <- CreateOptim(dataptr,
-                                          derivptr,
-                                          idx_in = idx_in, 
-                                          n=m,
-                                          nmax = N+10,
-                                          robust_log = robust_log,
-                                          trace=verbose,
-                                          kr = kr,
-                                          uncorr=FALSE,
-                                          bayes=bayes)
                        
-                       out_list <- FindOptimumDesign(dptr_ = ptr,type_ = algo)
-                       idx_out <- drop(out_list[["idx_in"]] )
-                       idx_out_exp <- sort(idx_out)
-                       rows_in <- c()
-                       for(i in 1:length(idx_out_exp)){
-                         uni.hash <- which(row.hash == idx_out_exp[i])
-                         if(length(uni.hash)==1){
-                           idx_out_exp[i] <- uni.hash
+                       if(is(algo,"character")){
+                         ## insert girling algorithm here
+                         if(gsub(" ","",private$designs[[1]]$mean$formula) != gsub(" ","",private$designs[[1]]$covariance$formula)){
+                           form <- paste0(private$designs[[1]]$mean$formula,"+",private$designs[[1]]$covariance$formula)
                          } else {
-                           idx_out_exp[i] <- uni.hash[!uni.hash %in% idx_out_exp[1:(i-1)]][1]
+                           form <- gsub(" ","",private$designs[[1]]$mean$formula)
                          }
-                         rows_in <- c(rows_in, which(expcond == idx_out_exp[i]))
-                       }
-                       if(!is.null(rm_cols)){
-                         rows_in <- idx_original[rows_in]
-                       } 
-                       if(keep){
-                         for(i in 1:self$n()[[1]]){
-                           private$designs[[i]]$subset_rows(rows_in)
+                         # outs <<- list(form,
+                         #               X_list[[1]],
+                         #               colnames(private$designs[[1]]$mean$data),
+                         #               tolower(private$designs[[1]]$family[[1]]),
+                         #               private$designs[[1]]$family[[2]],
+                         #               private$designs[[1]]$mean$parameters,
+                         #               private$designs[[1]]$covariance$parameters)
+                         bitsptr <- glmmrBase:::ModelBits__new(form,
+                                                               as.matrix(private$designs[[1]]$mean$data[idx.nodup,]),
+                                                               colnames(private$designs[[1]]$mean$data),
+                                                               tolower(private$designs[[1]]$family[[1]]),
+                                                               private$designs[[1]]$family[[2]],
+                                                               private$designs[[1]]$mean$parameters,
+                                                               private$designs[[1]]$covariance$parameters)
+                         modptr <- glmmrBase:::Model__new_from_bits(bitsptr)
+                         totalN <- ifelse(missing(N),nrow(private$designs[[1]]$mean$X),N)
+                         w <- glmmrBase:::girling_algorithm(modptr,
+                                                             totalN,
+                                                             sigma_sq_ = private$designs[[1]]$var_par,
+                                                             C_ = C_list[[1]],
+                                                             tol_ = 1e-6)
+                         rtndata <- private$designs[[1]]$mean$data[idx.nodup,]
+                         rtndata$weight <- w
+                         return(invisible(rtndata))
+                       } else {
+                         #combinatorial algorithms
+                         
+                         #prepare matrices
+                         w_diag <- matrix(0,ncol=length(X_list),nrow=n.uni.obs)
+                         for(i in 1:length(X_list)){
+                           X_list[[i]] <- X_list[[i]][idx.nodup,]
+                           Z_list[[i]] <- Z_list[[i]][idx.nodup,]
                            if(packageVersion('glmmrBase') < '0.3.0'){
-                             ncol <- 1:ncol(private$designs[[i]]$mean_function$X)
+                             message("Use of this package with glmmrBase <0.3.0 will be prevented in the near future.")
+                             if(is.null(rm_cols)){
+                               w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[idx.nodup]
+                             } else {
+                               w_diag[,i] <- Matrix::diag(private$designs[[i]]$.__enclos_env__$private$W)[-zero_idx][idx.nodup]
+                             }
+                           } else if(packageVersion('glmmrBase') < '0.4.2'){
+                             if(is.null(rm_cols)){
+                               w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[idx.nodup]
+                             } else {
+                               w_diag[,i] <- Matrix::diag(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
+                             }
                            } else {
-                             ncol <- 1:ncol(private$designs[[i]]$mean$X)
+                             if(is.null(rm_cols)){
+                               w_diag[,i] <- 1/Matrix::drop(private$designs[[i]]$w_matrix())[idx.nodup]
+                             } else {
+                               w_diag[,i] <- 1/Matrix::drop(private$designs[[i]]$w_matrix())[-zero_idx][idx.nodup]
+                             }
                            }
-                           
-                           if(!is.null(rm_cols))private$designs[[i]]$subset_cols(ncol[-rm_cols[[i]]])
-                           private$designs[[i]]$check(verbose=FALSE)
                          }
+                         max_obs <- unname(table(row.hash))
+                         expcond.id <- as.numeric(factor(expcond[idx.nodup],levels = unique(expcond[idx.nodup])))
+                         if(algo[1]==1){
+                           idx_in <- sort(sample(row.hash,m,replace=FALSE))
+                         } else if(algo[1]==2){
+                           # find a size p design
+                           ispd <- FALSE
+                           #n <- nrow(X_list[[1]])
+                           while(!ispd){
+                             idx_in <- sort(sample(unique(row.hash),p,replace=FALSE))
+                             M <- crossprod(X_list[[1]][expcond.id%in%idx_in,])
+                             cM <- suppressWarnings(tryCatch(chol(M),error=function(e)NULL))
+                             if(!is.null(cM))ispd <- TRUE
+                           }
+                         } else if(algo[1]==3){
+                           idx_in <- row.hash
+                         }
+                         bayes <- FALSE
+                         if(!is.null(V0)){
+                           bayes <- TRUE
+                           for(i in 1:length(X_list)){
+                             if(dim(V0[[i]])[1] != ncol(X_list[[i]]))stop(paste0("V0 wrong dimension for design ",i))
+                           }
+                         } else {
+                           V0 <- list()
+                           for(i in 1:length(X_list)){
+                             V0[[i]] <- matrix(1)
+                           }
+                         }
+                         dataptr <- CreateOptimData(C_list = C_list, 
+                                                    X_list = X_list,
+                                                    Z_list = Z_list,
+                                                    D_list = D_list,
+                                                    w_diag = w_diag,
+                                                    V0_list = V0,
+                                                    max_obs = max_obs,
+                                                    weights = weights, 
+                                                    exp_cond = expcond.id)
+                         derivptr <- CreateDerivatives()
+                         if(kr){
+                           for(i in 1:length(private$designs)){
+                             AddDesignDerivatives(dptr_ = derivptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
+                           }
+                         }
+                         ptr <- CreateOptim(dataptr,
+                                            derivptr,
+                                            idx_in = idx_in, 
+                                            n=m,
+                                            nmax = N+10,
+                                            robust_log = robust_log,
+                                            trace=verbose,
+                                            kr = kr,
+                                            uncorr=FALSE,
+                                            bayes=bayes)
+                         
+                         out_list <- FindOptimumDesign(dptr_ = ptr,type_ = algo)
+                         idx_out <- drop(out_list[["idx_in"]] )
+                         idx_out_exp <- sort(idx_out)
+                         rows_in <- c()
+                         for(i in 1:length(idx_out_exp)){
+                           uni.hash <- which(row.hash == idx_out_exp[i])
+                           if(length(uni.hash)==1){
+                             idx_out_exp[i] <- uni.hash
+                           } else {
+                             idx_out_exp[i] <- uni.hash[!uni.hash %in% idx_out_exp[1:(i-1)]][1]
+                           }
+                           rows_in <- c(rows_in, which(expcond == idx_out_exp[i]))
+                         }
+                         if(!is.null(rm_cols)){
+                           rows_in <- idx_original[rows_in]
+                         } 
+                         if(keep){
+                           for(i in 1:self$n()[[1]]){
+                             private$designs[[i]]$subset_rows(rows_in)
+                             if(packageVersion('glmmrBase') < '0.3.0'){
+                               ncol <- 1:ncol(private$designs[[i]]$mean_function$X)
+                             } else {
+                               ncol <- 1:ncol(private$designs[[i]]$mean$X)
+                             }
+                             
+                             if(!is.null(rm_cols))private$designs[[i]]$subset_cols(ncol[-rm_cols[[i]]])
+                             private$designs[[i]]$check(verbose=FALSE)
+                           }
+                         }
+                         return(invisible(list(rows = sort(rows_in), exp.cond = sort(idx_out_exp), val = out_list$best_val_vec,
+                                               func_calls = out_list$func_calls, mat_ops = out_list$mat_ops)))
                        }
-                       return(invisible(list(rows = sort(rows_in), exp.cond = sort(idx_out_exp), val = out_list$best_val_vec,
-                                             func_calls = out_list$func_calls, mat_ops = out_list$mat_ops)))
                      }
                    },
                    #' @description 
