@@ -464,11 +464,19 @@ each condition will be reported below."))
                                                                private$designs[[1]]$covariance$parameters)
                          modptr <- glmmrBase:::Model__new_from_bits(bitsptr)
                          totalN <- ifelse(missing(m),nrow(private$designs[[1]]$mean$X),m)
-                         w <- glmmrBase:::girling_algorithm(modptr,
-                                                             totalN,
-                                                             sigma_sq_ = private$designs[[1]]$var_par,
-                                                             C_ = C_list[[1]],
-                                                             tol_ = tol)
+                         if(packageVersion('glmmrBase') < '0.4.6'){
+                           w <- glmmrBase:::girling_algorithm(modptr,
+                                                              totalN,
+                                                              sigma_sq_ = private$designs[[1]]$var_par,
+                                                              C_ = C_list[[1]],
+                                                              tol_ = tol)
+                         } else {
+                           w <- glmmrBase:::girling_algorithm(modptr,
+                                                              totalN,
+                                                              C_ = C_list[[1]],
+                                                              tol_ = tol)
+                         }
+                         
                          rtndata <- private$designs[[1]]$mean$data[idx.nodup,]
                          rtndata$weight <- w
                          return(invisible(rtndata))
