@@ -19,8 +19,8 @@ inline double obj_fun(const MatrixXd &A,
 inline double c_obj_fun(const MatrixXd &M, 
                         const VectorXd &C) {
   // this is the objective function c-optimal
-  MatrixXd M_inv = M.inverse();
-  return C.transpose() * M_inv * C;
+  //MatrixXd M_inv = M.inverse();
+  return C.transpose() * M * C;
 }
 
 inline double c_d_deriv(const MatrixXd &M1, 

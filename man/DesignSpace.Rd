@@ -404,6 +404,7 @@ Algorithms to identify an approximate c-optimal design of size m within the desi
   algo = c(1),
   use_combin = FALSE,
   robust_log = FALSE,
+  kr = FALSE,
   p
 )}\if{html}{\out{</div>}}
 }
@@ -438,6 +439,8 @@ algorithm will be used, otherwise if it is FALSE, then a fast approximate altern
 
 \item{\code{robust_log}}{Logical. If TRUE and there are multiple designs in the design space then the robust criterion will be a sum of the log
 of the c-optimality criterion weighted by the study weights, and if FALSE then it will be a weighted sum of the absolute value.}
+
+\item{\code{kr}}{Logical. Whether to use the Kenwood-Roger small sample bias corrected variance matrix for the fixed effect parameters.}
 
 \item{\code{p}}{Positive integer specifying the size of the starting design for the greedy algorithm}
 }

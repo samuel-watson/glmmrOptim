@@ -53,13 +53,13 @@ class OptimData {
       max_obs_(max_obs),
       exp_cond_(exp_cond){
       for(int j=0; j<weights.size(); j++){
-        C_list_.add(Eigen::VectorXd(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(C_list[j])));
-        X_all_list_.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(X_list[j])));
-        Z_all_list_.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(Z_list[j])));
-        D_list_.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(D_list[j])));
-        V0_list_.add(Eigen::MatrixXd(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(V0_list[j])));
+        C_list_.add(VectorXd(Rcpp::as<Map<VectorXd> >(C_list[j])));
+        X_all_list_.add(MatrixXd(Rcpp::as<Map<MatrixXd> >(X_list[j])));
+        Z_all_list_.add(MatrixXd(Rcpp::as<Map<MatrixXd> >(Z_list[j])));
+        D_list_.add(MatrixXd(Rcpp::as<Map<MatrixXd> >(D_list[j])));
+        V0_list_.add(MatrixXd(Rcpp::as<Map<MatrixXd> >(V0_list[j])));
       }
-    };  
+    };
     
 };
 

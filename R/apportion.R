@@ -47,6 +47,11 @@ apportion <- function(w,n){
   # first check for integers
   if(any(wv%%1 == 0)){
     nint <- sum(wv%%1 == 0)
+    if(nint > 10){
+      designs[[1]] <- ceiling(wv)
+      message("Puckelsheim and Rieder designs skipped due to very large number of possible designs.")
+      break;
+    }
     idxint <- which(wv%%1 == 0)
     wint <- list()
     for(i in 1:nint){
