@@ -214,8 +214,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' of the c-optimality criterion weighted by the study weights, and if FALSE then it will be a weighted sum of the absolute value.
                    #' @param kr Logical. Whether to use the Kenwood-Roger small sample bias corrected variance matrix for the fixed effect parameters.
                    #' @param p Optional. Positive integer specifying the size of the starting design for the greedy algorithm
-                   #' @param N Optional. Integer. If using the Girling algorithm, then this is the total sample size. If not provided then the sample 
-                   #' size is taken from the size of the design.
+                   #' @param tol Optional scalar specifying the termination tolerance of the Girling algorithm.
                    #' @return A named list. If using the weighting method then the list contains the optimal experimental weights and a 
                    #' list of exact designs of size `m`, see \link[glmmrOptim]{apportion}. If using a combinatorial algorithm then 
                    #' the list contains the rows in the optimal design, the indexes of the experimental conditions in the optimal design,
@@ -276,7 +275,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                                       robust_log = FALSE,
                                       kr = FALSE,
                                       p,
-                                      N){
+                                      tol = 1e-8){
                      #checks and balances
                      if(keep&verbose)message("linked design objects will be overwritten with the new design")
                      if(!is.null(V0) & length(V0)!=self$n()[[1]])stop("V0 not equal to number of designs")
@@ -455,13 +454,7 @@ each condition will be reported below."))
                          } else {
                            form <- gsub(" ","",private$designs[[1]]$mean$formula)
                          }
-                         # outs <<- list(form,
-                         #               X_list[[1]],
-                         #               colnames(private$designs[[1]]$mean$data),
-                         #               tolower(private$designs[[1]]$family[[1]]),
-                         #               private$designs[[1]]$family[[2]],
-                         #               private$designs[[1]]$mean$parameters,
-                         #               private$designs[[1]]$covariance$parameters)
+                         
                          bitsptr <- glmmrBase:::ModelBits__new(form,
                                                                as.matrix(private$designs[[1]]$mean$data[idx.nodup,]),
                                                                colnames(private$designs[[1]]$mean$data),
@@ -470,12 +463,12 @@ each condition will be reported below."))
                                                                private$designs[[1]]$mean$parameters,
                                                                private$designs[[1]]$covariance$parameters)
                          modptr <- glmmrBase:::Model__new_from_bits(bitsptr)
-                         totalN <- ifelse(missing(N),nrow(private$designs[[1]]$mean$X),N)
+                         totalN <- ifelse(missing(m),nrow(private$designs[[1]]$mean$X),m)
                          w <- glmmrBase:::girling_algorithm(modptr,
                                                              totalN,
                                                              sigma_sq_ = private$designs[[1]]$var_par,
                                                              C_ = C_list[[1]],
-                                                             tol_ = 1e-6)
+                                                             tol_ = tol)
                          rtndata <- private$designs[[1]]$mean$data[idx.nodup,]
                          rtndata$weight <- w
                          return(invisible(rtndata))
