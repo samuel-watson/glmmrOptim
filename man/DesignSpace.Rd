@@ -406,8 +406,7 @@ Algorithms to identify an approximate c-optimal design of size m within the desi
   robust_log = FALSE,
   kr = FALSE,
   p,
-  N,
-  tol
+  tol = 1e-08
 )}\if{html}{\out{</div>}}
 }
 
@@ -445,9 +444,6 @@ of the c-optimality criterion weighted by the study weights, and if FALSE then i
 \item{\code{kr}}{Logical. Whether to use the Kenwood-Roger small sample bias corrected variance matrix for the fixed effect parameters.}
 
 \item{\code{p}}{Optional. Positive integer specifying the size of the starting design for the greedy algorithm}
-
-\item{\code{N}}{Optional. Integer. If using the Girling algorithm, then this is the total sample size. If not provided then the sample 
-size is taken from the size of the design.}
 
 \item{\code{tol}}{Optional scalar specifying the termination tolerance of the Girling algorithm.}
 }
