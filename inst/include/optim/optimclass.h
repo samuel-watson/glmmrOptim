@@ -135,9 +135,8 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
   int Rmod = derivs_.gaussian[idx] == 1 ? R+1 : R;
   MatrixXd M_new(M);
   MatrixXd SigX = Sinv*X;
-  MatrixXd PG = Sinv - SigX*M*SigX.transpose();
+  //MatrixXd PG = Sinv - SigX*M*SigX.transpose();
   MatrixXd M_theta = MatrixXd::Zero(Rmod,Rmod);
-  int q = Z.cols();
   MatrixXd partial1(n,n);
   MatrixXd partial2(n,n);
   MatrixXd meat = MatrixXd::Zero(X.cols(),X.cols());
@@ -159,7 +158,7 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
       } else {
         partial2 = MatrixXd::Identity(n,n);
       }
-      S.add(PG*partial1*PG*partial2);
+      S.add(Sinv*partial1*Sinv*partial2);
       Q.add(X.transpose()*Sinv*partial1*Sinv*partial2*SigX);
       // counter++;
       if(i < R && j < R){
@@ -173,7 +172,7 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
   for(int i = 0; i < Rmod; i++){
     for(int j = i; j < Rmod; j++){
       // using the expected REML information matrix here, but can use alternative commented out
-      M_theta(i,j) = 0.5*(S(counter).trace()); //- (M*Q(counter)).trace() + 0.5*((M*P(i)*M*P(j)).trace());
+      M_theta(i,j) = 0.5*(S(counter).trace())- (M*Q(counter)).trace() + 0.5*((M*P(i)*M*P(j)).trace());
       if(i!=j)M_theta(j,i)=M_theta(i,j);
       counter++;
     }
@@ -192,8 +191,8 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
         partial2 = MatrixXd::Identity(n,n);
       }
       int scnd_idx = i + j*(Rmod-1) - j*(j-1)/2;
-      meat += M_theta(i,j)*(SigX.transpose()*partial1*PG*partial2*SigX);//(Q(scnd_idx) + Q(scnd_idx).transpose() - P(i)*M*P(j) -P(j)*M*P(i));
-      meat += M_theta(i,j)*(SigX.transpose()*partial2*PG*partial1*SigX);
+      meat += M_theta(i,j)*(Q(scnd_idx) + Q(scnd_idx).transpose() - P(i)*M*P(j) -P(j)*M*P(i));
+      //meat += M_theta(i,j)*(SigX.transpose()*partial2*PG*partial1*SigX);
       if(i < R && j < R){
         scnd_idx = i + j*(R-1) - j*(j-1)/2;
         meat -= 0.5*M_theta(i,j)*(RR(scnd_idx));
@@ -207,17 +206,12 @@ inline MatrixXd glmmr::OptimDesign::KR_correction(const MatrixXd& M,
       partial1 = MatrixXd::Identity(n,n);
     }
     int scnd_idx = i + i*(Rmod-1) - i*(i-1)/2;
-    meat += M_theta(i,i)*(SigX.transpose()*partial1*PG*partial1*SigX); //(Q(scnd_idx) - P(i)*M*P(i));
+    meat += M_theta(i,i)*(Q(scnd_idx) - P(i)*M*P(i));
     if(i < R){
       scnd_idx = i + i*(R-1) - i*(i-1)/2;
       meat -= 0.25*M_theta(i,i)*RR(scnd_idx);
     }
   }
-  // use for debug
-  // Rcpp::Rcout << "\nM theta: \n" << M_theta;
-  // Rcpp::Rcout << "\nM: \n" << M;
-  // Rcpp::Rcout << "\nMeat: \n" << meat;
-  // Rcpp::Rcout << "\nCorrection: \n" << M*meat*M;
   M_new = M + 2*M*meat*M;
   return M_new;
 }
@@ -446,8 +440,9 @@ inline double glmmr::OptimDesign::rm_obs(int outobs,
       if(kr_){
         int q = data_.Z_all_list_.cols(idx);
         MatrixXd Z = glmmr::OptimEigen::mat_indexing(data_.Z_all_list_(idx),idxexist,ArrayXi::LinSpaced(q,0,q-1));
-        M = KR_correction(M,idx,X,Z,rm1A,idxexist);
-      }
+        MatrixXd Mkr(M);
+        M = KR_correction(Mkr,idx,X,Z,rm1A,idxexist);
+      } 
       M_list_sub_.replace(idx,M);
       if(rtn_val)vals(idx) = c_obj_fun( M, data_.C_list_(idx));
     }
@@ -572,7 +567,8 @@ inline double glmmr::OptimDesign::add_obs(int inobs,
     if(!issympd){
       M = M.llt().solve(MatrixXd::Identity(M.rows(),M.cols()));
       if(kr_){
-        M = KR_correction(M,idx,X,Z,A,idx_in_vec);
+        MatrixXd Mkr(M);
+        M = KR_correction(Mkr,idx,X,Z,A,idx_in_vec);
       }
       if(keep){
         if(idx==0)r_in_design_ = A.rows();

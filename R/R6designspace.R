@@ -212,7 +212,8 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' algorithm will be used, otherwise if it is FALSE, then a fast approximate alternative will be used. See Details
                    #' @param robust_log Logical. If TRUE and there are multiple designs in the design space then the robust criterion will be a sum of the log
                    #' of the c-optimality criterion weighted by the study weights, and if FALSE then it will be a weighted sum of the absolute value.
-                   #' @param kr Logical. Whether to use the Kenwood-Roger small sample bias corrected variance matrix for the fixed effect parameters.
+                   #' @param kr Logical. Whether to use the Kenwood-Roger small sample bias corrected variance matrix for the fixed effect parameters. We do not 
+                   #' recommend using this as it can produce some strange results and its behaviour is not well understood.
                    #' @param p Optional. Positive integer specifying the size of the starting design for the greedy algorithm
                    #' @param tol Optional scalar specifying the termination tolerance of the Girling algorithm.
                    #' @return A named list. If using the weighting method then the list contains the optimal experimental weights and a 
@@ -464,7 +465,7 @@ each condition will be reported below."))
                                                                private$designs[[1]]$covariance$parameters)
                          modptr <- glmmrBase:::Model__new_from_bits(bitsptr)
                          totalN <- ifelse(missing(m),nrow(private$designs[[1]]$mean$X),m)
-                         if(packageVersion('glmmrBase') < '0.4.6'){
+                         if(packageVersion('glmmrBase') < '0.4.5'){
                            w <- glmmrBase:::girling_algorithm(modptr,
                                                               totalN,
                                                               sigma_sq_ = private$designs[[1]]$var_par,
@@ -549,6 +550,7 @@ each condition will be reported below."))
                                                     exp_cond = expcond.id)
                          derivptr <- CreateDerivatives()
                          if(kr){
+                           message("Kenward-Roger correction in these algorithms is experimental and can produce some weird or nonsensical results.")
                            for(i in 1:length(private$designs)){
                              AddDesignDerivatives(dptr_ = derivptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
                            }
