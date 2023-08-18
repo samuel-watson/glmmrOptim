@@ -533,6 +533,7 @@ inline double glmmr::OptimDesign::add_obs(int inobs,
   VectorXd vals(nlist_);
   bool issympd;
   int r_in_design_tmp_ = r_in_design_;
+  bool exit_loop = false;
   for (int idx = 0; idx < nlist_; ++idx) {
     MatrixXd A = userm ? rm1A_list_.block(idx*nmax_,0,r_in_rm_,r_in_rm_) : 
     A_list_.block(idx*nmax_,0,r_in_design_tmp_,r_in_design_tmp_);
@@ -578,8 +579,9 @@ inline double glmmr::OptimDesign::add_obs(int inobs,
       vals(idx) = c_obj_fun( M, data_.C_list_(idx));
     } else {
       for(int k = 0; k<vals.size(); k++)vals(k) = 10000;
-      break;
+      exit_loop = true;
     }
+    if(exit_loop)break;
   }
   if(keep && !issympd){
     if(userm){
@@ -607,6 +609,7 @@ inline double glmmr::OptimDesign::add_obs_uncor(int inobs,
   VectorXd vals(nlist_);
   ArrayXi rowstoadd = glmmr::OptimEigen::find(data_.exp_cond_,inobs);
   bool issympd = true;
+  bool exit_loop = false;
   for(int j=0; j<nlist_;j++){
     MatrixXd X = MatrixXd::Zero(rowstoadd.size(),p_(j));
     MatrixXd Z = MatrixXd::Zero(rowstoadd.size(),q_(j));
@@ -630,8 +633,9 @@ inline double glmmr::OptimDesign::add_obs_uncor(int inobs,
       vals(j) = bayes_ ? c_obj_fun( M+data_.V0_list_(j), data_.C_list_(j)) : c_obj_fun( M, data_.C_list_(j));
     } else {
       for(int k = 0; k<vals.size(); k++)vals(k) = 10000;
-      break;
+      exit_loop = true;
     }
+    if(exit_loop)break;
   }
   if(keep && !issympd){
     if(userm){
