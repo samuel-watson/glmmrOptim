@@ -47,25 +47,27 @@ apportion <- function(w,n){
   # first check for integers
   if(any(wv%%1 == 0)){
     nint <- sum(wv%%1 == 0)
+    skip_loop = FALSE
     if(nint > 10){
       designs[[1]] <- ceiling(wv)
       message("Puckelsheim and Rieder designs skipped due to very large number of possible designs.")
-      break;
+      skip_loop = TRUE
     }
-    idxint <- which(wv%%1 == 0)
-    wint <- list()
-    for(i in 1:nint){
-      wint[[i]] <- c(wv[idxint[i]],wv[idxint[i]]+1)
+    if(!skip_loop){
+      idxint <- which(wv%%1 == 0)
+      wint <- list()
+      for(i in 1:nint){
+        wint[[i]] <- c(wv[idxint[i]],wv[idxint[i]]+1)
+      }
+      
+      dfint <- do.call(expand.grid,wint)
+      
+      for(i in 1:nrow(dfint)){
+        wvtmp <- ceiling(wv)
+        wvtmp[idxint] <- unname(unlist(dfint[i,]))
+        designs[[i]] <- wvtmp
+      }
     }
-    
-    dfint <- do.call(expand.grid,wint)
-    
-    for(i in 1:nrow(dfint)){
-      wvtmp <- ceiling(wv)
-      wvtmp[idxint] <- unname(unlist(dfint[i,]))
-      designs[[i]] <- wvtmp
-    }
-    
   } else {
     designs[[1]] <- ceiling(wv)
   }
