@@ -16,14 +16,14 @@ public:
   std::vector<glmmr::MatrixField<MatrixXd> > SecondOrderDerivatives;
   OptimDerivatives(){};
   
-  void addDesign(glmmr::ModelBits& model){
+  void addDesign(glmmr::Covariance& cov, bool is_gaussian){
     glmmr::MatrixField<MatrixXd> first;
     glmmr::MatrixField<MatrixXd> second;
     int curr_size = FirstOrderDerivatives.size();
     std::vector<MatrixXd> derivs;
-    model.covariance.derivatives(derivs,2);
-    int R = model.covariance.npar();
-    gaussian.push_back((int)(model.family.family == "gaussian"));
+    cov.derivatives(derivs,2);
+    int R = cov.npar();
+    gaussian.push_back((int)(is_gaussian));
     for(int i = 0; i < R; i++){
       first.add(derivs[1+i]);
     }

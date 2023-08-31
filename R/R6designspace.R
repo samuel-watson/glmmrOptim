@@ -552,7 +552,8 @@ each condition will be reported below."))
                          if(kr){
                            message("Kenward-Roger correction in these algorithms is experimental and can produce some weird or nonsensical results.")
                            for(i in 1:length(private$designs)){
-                             AddDesignDerivatives(dptr_ = derivptr,mptr_ = private$designs[[i]]$.__enclos_env__$private$bitsptr)
+                             is_gaussian <- private$designs[[i]]$family[[1]] == "gaussian"
+                             AddDesignDerivatives(dptr_ = derivptr,mptr_ = private$designs[[i]]$covariance$.__enclos_env__$private$ptr, is_gaussian)
                            }
                          }
                          ptr <- CreateOptim(dataptr,

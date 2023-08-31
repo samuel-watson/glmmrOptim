@@ -17,8 +17,8 @@ FindOptimumDesign <- function(dptr_, type_) {
     .Call(`_glmmrOptim_FindOptimumDesign`, dptr_, type_)
 }
 
-AddDesignDerivatives <- function(dptr_, mptr_) {
-    invisible(.Call(`_glmmrOptim_AddDesignDerivatives`, dptr_, mptr_))
+AddDesignDerivatives <- function(dptr_, mptr_, is_gaussian_) {
+    invisible(.Call(`_glmmrOptim_AddDesignDerivatives`, dptr_, mptr_, is_gaussian_))
 }
 
 #' Disable or enable parallelised computing

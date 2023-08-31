@@ -74,13 +74,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // AddDesignDerivatives
-void AddDesignDerivatives(SEXP dptr_, SEXP mptr_);
-RcppExport SEXP _glmmrOptim_AddDesignDerivatives(SEXP dptr_SEXP, SEXP mptr_SEXP) {
+void AddDesignDerivatives(SEXP dptr_, SEXP mptr_, SEXP is_gaussian_);
+RcppExport SEXP _glmmrOptim_AddDesignDerivatives(SEXP dptr_SEXP, SEXP mptr_SEXP, SEXP is_gaussian_SEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type dptr_(dptr_SEXP);
     Rcpp::traits::input_parameter< SEXP >::type mptr_(mptr_SEXP);
-    AddDesignDerivatives(dptr_, mptr_);
+    Rcpp::traits::input_parameter< SEXP >::type is_gaussian_(is_gaussian_SEXP);
+    AddDesignDerivatives(dptr_, mptr_, is_gaussian_);
     return R_NilValue;
 END_RCPP
 }
@@ -101,7 +102,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_glmmrOptim_CreateOptim", (DL_FUNC) &_glmmrOptim_CreateOptim, 10},
     {"_glmmrOptim_CreateDerivatives", (DL_FUNC) &_glmmrOptim_CreateDerivatives, 0},
     {"_glmmrOptim_FindOptimumDesign", (DL_FUNC) &_glmmrOptim_FindOptimumDesign, 2},
-    {"_glmmrOptim_AddDesignDerivatives", (DL_FUNC) &_glmmrOptim_AddDesignDerivatives, 2},
+    {"_glmmrOptim_AddDesignDerivatives", (DL_FUNC) &_glmmrOptim_AddDesignDerivatives, 3},
     {"_glmmrOptim_setParallelOptim", (DL_FUNC) &_glmmrOptim_setParallelOptim, 2},
     {NULL, NULL, 0}
 };

@@ -117,8 +117,9 @@ Rcpp::List FindOptimumDesign(SEXP dptr_,SEXP type_){
 }
 
 // [[Rcpp::export]]
-void AddDesignDerivatives(SEXP dptr_, SEXP mptr_){
+void AddDesignDerivatives(SEXP dptr_, SEXP mptr_, SEXP is_gaussian_){
+  bool is_gaussian = as<bool>(is_gaussian_);
   XPtr<glmmr::OptimDerivatives> dptr(dptr_);
-  XPtr<glmmr::ModelBits> mptr(mptr_);
-  dptr->addDesign(*mptr);
+  XPtr<glmmr::Covariance> mptr(mptr_);
+  dptr->addDesign(*mptr, is_gaussian);
 }
