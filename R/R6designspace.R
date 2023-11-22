@@ -456,14 +456,13 @@ each condition will be reported below."))
                            form <- gsub(" ","",private$designs[[1]]$mean$formula)
                          }
                          
-                         bitsptr <- glmmrBase:::ModelBits__new(form,
-                                                               as.matrix(private$designs[[1]]$mean$data[idx.nodup,]),
-                                                               colnames(private$designs[[1]]$mean$data),
-                                                               tolower(private$designs[[1]]$family[[1]]),
-                                                               private$designs[[1]]$family[[2]],
-                                                               private$designs[[1]]$mean$parameters,
-                                                               private$designs[[1]]$covariance$parameters)
-                         modptr <- glmmrBase:::Model__new_from_bits(bitsptr)
+                         modptr <- glmmrBase:::Model__new_w_pars(form,
+                                                                 as.matrix(private$designs[[1]]$mean$data[idx.nodup,]),
+                                                                 colnames(private$designs[[1]]$mean$data),
+                                                                 tolower(private$designs[[1]]$family[[1]]),
+                                                                 private$designs[[1]]$family[[2]],
+                                                                 private$designs[[1]]$mean$parameters,
+                                                                 private$designs[[1]]$covariance$parameters)
                          totalN <- ifelse(missing(m),nrow(private$designs[[1]]$mean$X),m)
                          if(packageVersion('glmmrBase') < '0.4.5'){
                            w <- glmmrBase:::girling_algorithm(modptr,
