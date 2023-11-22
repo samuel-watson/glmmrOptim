@@ -5,6 +5,15 @@
 R package for approximate optimal experimental designs using generalised linear mixed models (GLMM) and combinatorial optimisation methods,
 built on the [glmmrBase](https://github.com/samuel-watson/glmmrBase) package. A discussion of the methods in this package can be found in [Watson et al (2023)]([https://arxiv.org/abs/2207.09183](https://journals.sagepub.com/doi/10.1177/09622802231202379)).
 
+## Installation and building
+The package is available on CRAN. A pre-compiled binary is also available with each release on this page. The package requires `glmmrBase`, it is recommended to build both `glmmrBase` and this package from source with the flags below, which can dramatically increase performance.
+
+### Building from source
+It is strongly recommended to build from source with the flags `-fno-math-errno -O3 -g`, this will cut the time to run many functions by as much as 90%. One way to do this is to set CPP_FLAGS in `~/.R/Makevars`. Another alternative is to download the package source `.tar.gz` file and run from the command line 
+```
+R CMD INSTALL --configure-args="CPPFLAGS=-fno-math-errno -O3 -g" glmmrOptim_0.3.3.tar.gz
+```
+
 ## Model specification
 For model specification see readme of [glmmrBase](https://github.com/samuel-watson/glmmrBase). The `glmmrOptim` package adds the `DesignSpace` class. An instance 
 of a `DesignSpace` object takes one or more `Model` objects, where each object specifies a particular design. Each object should be a complete enumeration of all
