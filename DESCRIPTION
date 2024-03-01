@@ -23,7 +23,7 @@ LinkingTo:
     Rcpp (>= 1.0.7),
     RcppEigen,
     RcppProgress,
-    glmmrBase (>= 0.4.5),
+    glmmrBase (>= 0.4.6),
     SparseChol (>= 0.2.1),
     BH,
     rminqa (>= 0.2.2)
