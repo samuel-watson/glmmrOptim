@@ -167,10 +167,11 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' parameter of interest. For example, if the columns of X in the design are an interdept, the treatment indicator, and then time 
                    #' period indicators, the vector C may be `c(0,1,0,0,...)`, such that the objective function is the variance of that parameter. 
                    #' If there are multiple designs in the design space, the C vectors do 
-                   #' not have to be the same as the columns of X in each design might differ.
+                   #' not have to be the same as the columns of X in each design might differ. All the algorithms included in this package are described in 
+                   #' Watson, Hemming, and Girling (2023) <arXiv:2303.07953> and Watson (2023) <arXiv:2303.12657>.
                    #' 
                    #' If the experimental conditions are correlated with one another, then one of three combinatorial algorithms can be used, see 
-                   #' Watson and Pan, 2022 <arXiv:2207.09183>. The algorithms are: (i) local search, which starts from a random design of size m and then
+                   #' Watson and Pan, 2022 <doi:10.1007/s11222-023-10280-w>. The algorithms are: (i) local search, which starts from a random design of size m and then
                    #' makes the best swap between an experimental condition in and out of the design until no variance improving swap can be made; 
                    #' (ii) greedy search, which starts from a design of size p << n and then sequentially adds the best experimental condition until 
                    #' it generates a design of size m; (iii) reverse greedy search, which starts from the complete set of N experimental conditions and 
@@ -183,6 +184,10 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' The approximate algorithm will return weights in [0,1] for each unique experimental condition representing
                    #' the "proportion of effort" to spend on each design condition. There are different ways to translate these weights into integer
                    #' values, which are returned see \link[glmmrOptim]{apportion}. Use of the approximate optimal design algorithm can be disabled used `use_combin=TRUE`
+                   #' 
+                   #' A weights algorithm for cases including when the observations are correlated are also included. This algorithm determines the 
+                   #' GLMM estimation weights that minimise the variance. The algorithm is described in Watson, Hemming, and Girling (2023) <arXiv:2303.07953>
+                   #' along with the other algoithms in this package.
                    #' 
                    #' In some cases the optimal design will not be full rank with respect to the design matrix X of the design space. This will result
                    #' in a non-positive definite information matrix, and an error. The program will indicate which columns of X are likely "empty" in the optimal
@@ -207,7 +212,8 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' @param algo A vector of integers indicating the algorithm(s) to use. 1 = local search, 2 = greedy search, 3 = reverse greedy search.
                    #' Declaring `algo = 1` for example will use the local search. Providing a vector such as `c(3,1)` will execute the algorithms in order,
                    #' so this would run a reverse greedy search followed by a local search. Note that many combinations will be redundant. For example, running
-                   #' a greedy search after a local search will not have any effect.
+                   #' a greedy search after a local search will not have any effect. One can also use a general weights algorithm called the 'girling' algorithm,
+                   #' setting `algo="girling"`.
                    #' @param use_combin Logical. If the experimental conditions are uncorrelated, if this option is TRUE then the hill climbing 
                    #' algorithm will be used, otherwise if it is FALSE, then a fast approximate alternative will be used. See Details
                    #' @param robust_log Logical. If TRUE and there are multiple designs in the design space then the robust criterion will be a sum of the log
@@ -257,7 +263,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' des2$covariance <- Covariance$new(
                    #'   data = df,
                    #'   formula = ~ (1|gr(cl)*ar1(t)),
-                   #'   parameters = c(0.25,0.8)
+                   #'   parameters = c(0.05,0.8)
                    #' )
                    #' ds <- DesignSpace$new(des,des2)
                    #' #weighted average assuming equal weights using local search
@@ -456,14 +462,15 @@ each condition will be reported below."))
                            form <- gsub(" ","",private$designs[[1]]$mean$formula)
                          }
                          
-                         bitsptr <- glmmrBase:::ModelBits__new(form,
+                         modptr <- glmmrBase:::Model__new_w_pars(form,
                                                                as.matrix(private$designs[[1]]$mean$data[idx.nodup,]),
                                                                colnames(private$designs[[1]]$mean$data),
                                                                tolower(private$designs[[1]]$family[[1]]),
                                                                private$designs[[1]]$family[[2]],
                                                                private$designs[[1]]$mean$parameters,
                                                                private$designs[[1]]$covariance$parameters)
-                         modptr <- glmmrBase:::Model__new_from_bits(bitsptr)
+                         glmmrBase:::Model__set_var_par(modptr,private$designs[[1]]$var_par)
+                         glmmrBase:::Model__update_W(modptr)
                          totalN <- ifelse(missing(m),nrow(private$designs[[1]]$mean$X),m)
                          if(packageVersion('glmmrBase') < '0.4.5'){
                            w <- glmmrBase:::girling_algorithm(modptr,

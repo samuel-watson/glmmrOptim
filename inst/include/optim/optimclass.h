@@ -1,10 +1,8 @@
-#ifndef OPTIMCLASS_H
-#define OPTIMCLASS_H
+#pragma once
 
 #include <cmath> 
 #include <RcppEigen.h>
 #include "optimlinalg.h"
-#include "matrixfield.h"
 #include "eigenext.h"
 #include "optimdata.h"
 #include "optimderivatives.h"
@@ -701,5 +699,3 @@ inline double glmmr::OptimDesign::c_obj_fun(const MatrixXd &M,
                         const VectorXd &C) {
   return C.transpose() * M * C;
 }
-
-#endif

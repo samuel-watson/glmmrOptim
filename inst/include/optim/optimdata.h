@@ -1,8 +1,7 @@
-#ifndef OPTIMDATA_H
-#define OPTIMDATA_H
+#pragma once
 
 #include <RcppEigen.h>
-#include "matrixfield.h"
+#include <glmmr/matrixfield.h>
 
 namespace glmmr{
 
@@ -64,5 +63,3 @@ class OptimData {
 };
 
 }
-
-#endif

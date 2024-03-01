@@ -1,10 +1,8 @@
-#ifndef GLMMROPTIM_H
-#define GLMMROPTIM_H
+#pragma once
 
 #include <cmath> 
 #include <RcppEigen.h>
-#include <glmmr/openmpheader.h>
-#include "optim/optimdata.h"
+#include "optim/optimmaths.h"
 #include "optim/optimclass.h"
-
-#endif
+#include "optim/optimdata.h"
+#include <glmmr/openmpheader.h>

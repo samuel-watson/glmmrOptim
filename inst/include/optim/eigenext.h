@@ -1,5 +1,4 @@
-#ifndef EIGENEXT_H
-#define EIGENEXT_H
+#pragma once
 
 #include <cmath> 
 #include <RcppEigen.h>
@@ -73,5 +72,3 @@ inline bool isnotsympd(Eigen::MatrixXd mat){
 
 }
 }
-
-#endif

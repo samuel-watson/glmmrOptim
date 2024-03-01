@@ -1,9 +1,7 @@
-#ifndef OPTIMDERIVATIVES_H
-#define OPTIMDERIVATIVES_H
+#pragma once
 
 #include <RcppEigen.h>
 #include <glmmr.h>
-#include "matrixfield.h"
 
 namespace glmmr{
 
@@ -39,5 +37,3 @@ public:
 };
 
 }
-
-#endif

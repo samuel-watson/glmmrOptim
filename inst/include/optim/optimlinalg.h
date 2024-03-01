@@ -1,5 +1,4 @@
-#ifndef OPTIMLINALG_H
-#define OPTIMLINALG_H
+#pragma once
 
 #include <cmath> 
 #include <RcppEigen.h>
@@ -105,5 +104,3 @@ inline Eigen::ArrayXi uvec_minus(const Eigen::ArrayXi &v,
 }
 
 }
-
-#endif
