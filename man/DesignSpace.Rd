@@ -88,18 +88,16 @@ setParallelOptim(FALSE)
 }
 df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
-des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.04,0.01)),
-                 mean = list(formula = ~ int + factor(t) - 1,
-                             parameters = rep(0,4)),
+des <- Model$new(formula = ~ int + factor(t) - 1+ (1|gr(cl)) + (1|gr(cl,t)),
+                 covariance = c(0.04,0.01),
+                 mean = rep(0,4),
                  data=df,
                  family=gaussian())
 ds <- DesignSpace$new(des)
 #add another design
-des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.05,0.8)),
-                 mean = list(formula = ~ int + factor(t) - 1,
-                             parameters = rep(0,4)),
+des2 <- Model$new(formula = ~ int + factor(t) - 1 + (1|gr(cl)) + (1|gr(cl,t)),
+                  covariance = c(0.05,0.8),
+                 mean = rep(0,4),
                  data=df,
                  family=gaussian())
 ds$add(des2)
@@ -152,10 +150,9 @@ df <- nelder(~(cl(6)*t(5)) > ind(5))
 df$int <- 0
 df[df$t >= df$cl, 'int'] <- 1
 des <- Model$new(
-  covariance = list(formula = ~ (1|gr(cl)),
-                    parameters = c(0.05)),
-  mean = list(formula = ~ factor(t) + int - 1, 
-              parameters = c(rep(0,5),0.6)),
+  formula = ~ factor(t) + int - 1 + (1|gr(cl)),
+  covariance = c(0.05),
+  mean = c(rep(0,5),0.6),
   data=df,
   family=gaussian(),
   var_par = 1
@@ -176,11 +173,13 @@ opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
 opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1)
 
 #robust optimisation using two designs
-des2 <- des$clone(deep=TRUE)
-des2$covariance <- Covariance$new(
-  data = df,
-  formula = ~ (1|gr(cl)*ar1(t)),
-  parameters = c(0.05,0.8)
+des2 <- Model$new(
+  formula = ~ factor(t) + int - 1 + (1|gr(cl)*ar1(t)),
+  covariance = c(0.05,0.8),
+  mean = c(rep(0,5),0.6),
+  data=df,
+  family=gaussian(),
+  var_par = 1
 )
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
@@ -255,18 +254,16 @@ setParallelOptim(FALSE)
 }
 df <- nelder(~ ((int(2)*t(3)) > cl(3)) > ind(5))
 df$int <- df$int - 1
-des <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.04,0.01)),
-                 mean = list(formula = ~ int + factor(t) - 1,
-                             parameters = rep(0,4)),
+des <- Model$new(formula = ~ int + factor(t) - 1+ (1|gr(cl)) + (1|gr(cl,t)),
+                 covariance = c(0.04,0.01),
+                 mean = rep(0,4),
                  data=df,
                  family=gaussian())
 ds <- DesignSpace$new(des)
 #add another design
-des2 <- Model$new(covariance = list(formula = ~ (1|gr(cl)) + (1|gr(cl,t)),
-                                   parameters = c(0.05,0.8)),
-                 mean = list(formula = ~ int + factor(t) - 1,
-                             parameters = rep(0,4)),
+des2 <- Model$new(formula = ~ int + factor(t) - 1 + (1|gr(cl)) + (1|gr(cl,t)),
+                  covariance = c(0.05,0.8),
+                 mean = rep(0,4),
                  data=df,
                  family=gaussian())
 ds$add(des2)
@@ -472,10 +469,9 @@ df <- nelder(~(cl(6)*t(5)) > ind(5))
 df$int <- 0
 df[df$t >= df$cl, 'int'] <- 1
 des <- Model$new(
-  covariance = list(formula = ~ (1|gr(cl)),
-                    parameters = c(0.05)),
-  mean = list(formula = ~ factor(t) + int - 1, 
-              parameters = c(rep(0,5),0.6)),
+  formula = ~ factor(t) + int - 1 + (1|gr(cl)),
+  covariance = c(0.05),
+  mean = c(rep(0,5),0.6),
   data=df,
   family=gaussian(),
   var_par = 1
@@ -496,11 +492,13 @@ opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
 opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1)
 
 #robust optimisation using two designs
-des2 <- des$clone(deep=TRUE)
-des2$covariance <- Covariance$new(
-  data = df,
-  formula = ~ (1|gr(cl)*ar1(t)),
-  parameters = c(0.05,0.8)
+des2 <- Model$new(
+  formula = ~ factor(t) + int - 1 + (1|gr(cl)*ar1(t)),
+  covariance = c(0.05,0.8),
+  mean = c(rep(0,5),0.6),
+  data=df,
+  family=gaussian(),
+  var_par = 1
 )
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
