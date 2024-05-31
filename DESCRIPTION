@@ -2,7 +2,7 @@ Package: glmmrOptim
 Type: Package
 Title: Approximate Optimal Experimental Designs Using Generalised Linear Mixed Models
 Version: 0.3.5
-Date: 2024-05-28
+Date: 2024-05-30
 Authors@R: c(person("Sam", "Watson", email = "S.I.Watson@bham.ac.uk",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
@@ -13,7 +13,7 @@ Description: Optimal design analysis algorithms for any study design that can be
   cohort studies, spatial and temporal epidemiological studies, and split-plot designs.
   See <https://github.com/samuel-watson/glmmrBase/blob/master/README.md> for a
   detailed manual on model specification. A detailed discussion of the methods in this
-  package can be found in Watson and Pan (2022) <arXiv:2207.09183>.
+  package can be found in Watson, Hemming, and Girling (2023) <doi:10.1177/09622802231202379>.
 License: GPL (>= 2)
 Imports: 
     methods,

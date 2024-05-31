@@ -166,7 +166,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' period indicators, the vector C may be `c(0,1,0,0,...)`, such that the objective function is the variance of that parameter. 
                    #' If there are multiple designs in the design space, the C vectors do 
                    #' not have to be the same as the columns of X in each design might differ. All the algorithms included in this package are described in 
-                   #' Watson, Hemming, and Girling (2023) <arXiv:2303.07953> and Watson (2023) <arXiv:2303.12657>.
+                   #' Watson, Hemming, and Girling (2023) <doi:10.1177/09622802231202379> and Watson (2023) <doi:10.1007/s11222-023-10280-w>.
                    #' 
                    #' If the experimental conditions are correlated with one another, then one of three combinatorial algorithms can be used, see 
                    #' Watson and Pan, 2022 <doi:10.1007/s11222-023-10280-w>. The algorithms are: (i) local search, which starts from a random design of size m and then
@@ -184,7 +184,7 @@ DesignSpace <- R6::R6Class("DesignSpace",
                    #' values, which are returned see \link[glmmrOptim]{apportion}. Use of the approximate optimal design algorithm can be disabled used `use_combin=TRUE`
                    #' 
                    #' A weights algorithm for cases including when the observations are correlated are also included. This algorithm determines the 
-                   #' GLMM estimation weights that minimise the variance. The algorithm is described in Watson, Hemming, and Girling (2023) <arXiv:2303.07953>
+                   #' GLMM estimation weights that minimise the variance. The algorithm is described in Watson, Hemming, and Girling (2023) <doi:10.1177/09622802231202379>
                    #' along with the other algoithms in this package.
                    #' 
                    #' In some cases the optimal design will not be full rank with respect to the design matrix X of the design space. This will result
