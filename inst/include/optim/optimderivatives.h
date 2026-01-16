@@ -1,7 +1,9 @@
 #pragma once
 
 #include <RcppEigen.h>
-#include <glmmr.h>
+#include <glmmr/covariance.hpp>
+
+// [[Rcpp::depends(glmmrBase)]]
 
 namespace glmmr{
 

@@ -12,6 +12,17 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// setParallelOptim
+void setParallelOptim(SEXP parallel_, int cores_);
+RcppExport SEXP _glmmrOptim_setParallelOptim(SEXP parallel_SEXP, SEXP cores_SEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type parallel_(parallel_SEXP);
+    Rcpp::traits::input_parameter< int >::type cores_(cores_SEXP);
+    setParallelOptim(parallel_, cores_);
+    return R_NilValue;
+END_RCPP
+}
 // CreateOptimData
 SEXP CreateOptimData(Rcpp::List C_list, Rcpp::List X_list, Rcpp::List Z_list, Rcpp::List D_list, SEXP w_diag, Rcpp::List V0_list, SEXP max_obs, SEXP weights, SEXP exp_cond);
 RcppExport SEXP _glmmrOptim_CreateOptimData(SEXP C_listSEXP, SEXP X_listSEXP, SEXP Z_listSEXP, SEXP D_listSEXP, SEXP w_diagSEXP, SEXP V0_listSEXP, SEXP max_obsSEXP, SEXP weightsSEXP, SEXP exp_condSEXP) {
@@ -85,25 +96,14 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// setParallelOptim
-void setParallelOptim(SEXP parallel_, int cores_);
-RcppExport SEXP _glmmrOptim_setParallelOptim(SEXP parallel_SEXP, SEXP cores_SEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type parallel_(parallel_SEXP);
-    Rcpp::traits::input_parameter< int >::type cores_(cores_SEXP);
-    setParallelOptim(parallel_, cores_);
-    return R_NilValue;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_glmmrOptim_setParallelOptim", (DL_FUNC) &_glmmrOptim_setParallelOptim, 2},
     {"_glmmrOptim_CreateOptimData", (DL_FUNC) &_glmmrOptim_CreateOptimData, 9},
     {"_glmmrOptim_CreateOptim", (DL_FUNC) &_glmmrOptim_CreateOptim, 10},
     {"_glmmrOptim_CreateDerivatives", (DL_FUNC) &_glmmrOptim_CreateDerivatives, 0},
     {"_glmmrOptim_FindOptimumDesign", (DL_FUNC) &_glmmrOptim_FindOptimumDesign, 2},
     {"_glmmrOptim_AddDesignDerivatives", (DL_FUNC) &_glmmrOptim_AddDesignDerivatives, 3},
-    {"_glmmrOptim_setParallelOptim", (DL_FUNC) &_glmmrOptim_setParallelOptim, 2},
     {NULL, NULL, 0}
 };
 

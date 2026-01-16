@@ -454,22 +454,25 @@ each condition will be reported below."))
                        n.uni.obs <- length(idx.nodup)
                        
                        if(is(algo,"character")){
-                         ## insert girling algorithm here
-                         if(gsub(" ","",private$designs[[1]]$mean$formula) != gsub(" ","",private$designs[[1]]$covariance$formula)){
-                           form <- paste0(private$designs[[1]]$mean$formula,"+",private$designs[[1]]$covariance$formula)
-                         } else {
-                           form <- gsub(" ","",private$designs[[1]]$mean$formula)
+                         if(packageVersion('glmmrBase') < '0.11.0'){
+                           ## insert girling algorithm here
+                           if(gsub(" ","",private$designs[[1]]$mean$formula) != gsub(" ","",private$designs[[1]]$covariance$formula)){
+                             form <- paste0(private$designs[[1]]$mean$formula,"+",private$designs[[1]]$covariance$formula)
+                           } else {
+                             form <- gsub(" ","",private$designs[[1]]$mean$formula)
+                           }
+                           
+                           modptr <- glmmrBase:::Model__new_w_pars(form,
+                                                                   as.matrix(private$designs[[1]]$mean$data[idx.nodup,]),
+                                                                   colnames(private$designs[[1]]$mean$data),
+                                                                   tolower(private$designs[[1]]$family[[1]]),
+                                                                   private$designs[[1]]$family[[2]],
+                                                                   private$designs[[1]]$mean$parameters,
+                                                                   private$designs[[1]]$covariance$parameters)
+                           glmmrBase:::Model__set_var_par(modptr,private$designs[[1]]$var_par)
+                           glmmrBase:::Model__update_W(modptr)
                          }
                          
-                         modptr <- glmmrBase:::Model__new_w_pars(form,
-                                                               as.matrix(private$designs[[1]]$mean$data[idx.nodup,]),
-                                                               colnames(private$designs[[1]]$mean$data),
-                                                               tolower(private$designs[[1]]$family[[1]]),
-                                                               private$designs[[1]]$family[[2]],
-                                                               private$designs[[1]]$mean$parameters,
-                                                               private$designs[[1]]$covariance$parameters)
-                         glmmrBase:::Model__set_var_par(modptr,private$designs[[1]]$var_par)
-                         glmmrBase:::Model__update_W(modptr)
                          totalN <- ifelse(missing(m),nrow(private$designs[[1]]$mean$X),m)
                          if(packageVersion('glmmrBase') < '0.4.5'){
                            w <- glmmrBase:::girling_algorithm(modptr,
@@ -477,8 +480,13 @@ each condition will be reported below."))
                                                               sigma_sq_ = private$designs[[1]]$var_par,
                                                               C_ = C_list[[1]],
                                                               tol_ = tol)
-                         } else {
+                         } else if(packageVersion('glmmrBase') >= '0.4.5' & packageVersion('glmmrBase') < '0.11.1'){
                            w <- glmmrBase:::girling_algorithm(modptr,
+                                                              totalN,
+                                                              C_ = C_list[[1]],
+                                                              tol_ = tol)
+                         } else {
+                           w <- glmmrBase:::girling_algorithm(private$designs[[1]]$.__enclos_env__$private$ptr,
                                                               totalN,
                                                               C_ = C_list[[1]],
                                                               tol_ = tol)

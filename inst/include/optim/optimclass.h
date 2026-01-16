@@ -8,7 +8,7 @@
 #include "optimderivatives.h"
 #include <progress.hpp>
 #include <progress_bar.hpp>
-#include <glmmr.h>
+#include <glmmr/matrixfield.h>
 
 
 using namespace Eigen;

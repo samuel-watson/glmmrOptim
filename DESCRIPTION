@@ -1,8 +1,8 @@
 Package: glmmrOptim
 Type: Package
 Title: Approximate Optimal Experimental Designs Using Generalised Linear Mixed Models
-Version: 0.3.5
-Date: 2024-05-30
+Version: 0.3.6
+Date: 2024-12-17
 Authors@R: c(person("Sam", "Watson", email = "S.I.Watson@bham.ac.uk",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
