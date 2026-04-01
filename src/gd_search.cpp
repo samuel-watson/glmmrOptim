@@ -7,6 +7,7 @@
 
 using namespace Rcpp;
 
+
 //' Disable or enable parallelised computing
  //' 
  //' By default, the package will use multithreading for many calculations if OpenMP is 

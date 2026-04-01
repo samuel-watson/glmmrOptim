@@ -1,8 +1,8 @@
 Package: glmmrOptim
 Type: Package
 Title: Approximate Optimal Experimental Designs Using Generalised Linear Mixed Models
-Version: 0.3.6
-Date: 2024-12-17
+Version: 0.3.8
+Date: 2026-04-01
 Authors@R: c(person("Sam", "Watson", email = "S.I.Watson@bham.ac.uk",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
@@ -35,7 +35,7 @@ URL: https://github.com/samuel-watson/glmmrOptim
 BugReports: https://github.com/samuel-watson/glmmrOptim/issues
 Suggests: 
     testthat,
-    CVXR
+    CVXR (>= 1.8.0)
 Biarch: true
 Depends: 
     R (>= 3.4.0),

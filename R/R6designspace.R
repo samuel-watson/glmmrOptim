@@ -695,8 +695,8 @@ each condition will be reported below."))
                      obj <- sum(mu)
                      prob <- CVXR::Problem(CVXR::Minimize(obj),constr)
                      stopifnot(CVXR::is_dcp(prob))
-                     res <- CVXR::solve(prob)
-                     weights <- res$getValue(mu)
+                     res <- CVXR::psolve(prob)
+                     weights <- CVXR::value(mu)
                      # choose the m biggest to keep
                      weights/sum(weights)
                      #order(weights,decreasing = TRUE)[1:m]

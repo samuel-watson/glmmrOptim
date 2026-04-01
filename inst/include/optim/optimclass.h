@@ -53,6 +53,7 @@ public:
   bool kr_;
   bool bayes_;
   
+  
 public:
   
   OptimDesign(const ArrayXi& idx_in, 
