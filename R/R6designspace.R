@@ -668,38 +668,28 @@ each condition will be reported below."))
                      sig <- private$genSlist()
                      weights <- self$weights
                      exp_cond <- self$experimental_condition
-                     
                      n_r <- length(sig)
-                     constr <- list()
-                     n <- nrow(X[[1]])
-                     n_ex <- unique(exp_cond)
-                     mu <- CVXR::Variable(length(n_ex))
-                     z <- CVXR::Variable(n*n_r)
-                     
-                     for(i in 1:n_r){
-                       constr[[i]] <- t(X[[i]])%*%Matrix::t(Matrix::chol(Matrix::solve(sig[[i]])))%*%z[c(1:n + n*(i-1))] == C[[i]]
+                     A_list <- vector("list", n_r)
+                     c_list <- vector("list", n_r)
+                     for (r in seq_len(n_r)) {
+                       # Mirror the original constraint exactly: X^T %*% t(chol(Sigma^{-1})) %*% z = C
+                       Rchol <- Matrix::chol(Matrix::solve(sig[[r]]))   # upper-tri, R^T R = Sigma^{-1}
+                       A_list[[r]] <- as.matrix(Matrix::t(X[[r]]) %*% Matrix::t(Rchol))
+                       c_list[[r]] <- as.numeric(C[[r]])
                      }
                      
-                     for(i in n_ex){
-                       #build expression
-                       cons_str <- "weights[1]*CVXR::p_norm(z[which(exp_cond==i)])"
-                       if(n_r > 1){
-                         for(j in 1:(n_r-1)){
-                           cons_str <- paste0(cons_str," + weights[",j+1,"]*p_norm(z[(which(exp_cond==i)+",j,"*n)])")
-                         }
-                       }
-                       cons_str <- paste0(cons_str, " <= mu[i]")
-                       
-                       constr[[(length(constr)+1)]] <- eval(str2lang(cons_str))
-                     }
-                     obj <- sum(mu)
-                     prob <- CVXR::Problem(CVXR::Minimize(obj),constr)
-                     stopifnot(CVXR::is_dcp(prob))
-                     res <- CVXR::psolve(prob)
-                     weights <- CVXR::value(mu)
-                     # choose the m biggest to keep
-                     weights/sum(weights)
-                     #order(weights,decreasing = TRUE)[1:m]
+                     ec_int <- as.integer(as.factor(exp_cond))
+                     
+                     mu <- socp_admm(
+                       A_list   = A_list,
+                       c_list   = c_list,
+                       exp_cond = ec_int,
+                       w        = as.numeric(self$weights),
+                       rho      = 1.0,
+                       tol      = 1e-8,
+                       max_iter = 5000L
+                     )
+                     return(mu)
                    }
                  )
 )

@@ -1,8 +1,8 @@
 Package: glmmrOptim
 Type: Package
 Title: Approximate Optimal Experimental Designs Using Generalised Linear Mixed Models
-Version: 0.3.8
-Date: 2026-04-01
+Version: 0.4.0
+Date: 2026-04-16
 Authors@R: c(person("Sam", "Watson", email = "S.I.Watson@bham.ac.uk",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
@@ -23,7 +23,7 @@ LinkingTo:
     Rcpp (>= 1.0.7),
     RcppEigen,
     RcppProgress,
-    glmmrBase (>= 0.4.6),
+    glmmrBase (>= 1.0.0),
     SparseChol (>= 0.2.1),
     BH,
     rminqa (>= 0.2.2)
@@ -33,9 +33,6 @@ Author: Sam Watson [aut, cre],
         Yi Pan [aut]
 URL: https://github.com/samuel-watson/glmmrOptim
 BugReports: https://github.com/samuel-watson/glmmrOptim/issues
-Suggests: 
-    testthat,
-    CVXR (>= 1.8.0)
 Biarch: true
 Depends: 
     R (>= 3.4.0),

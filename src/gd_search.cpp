@@ -156,3 +156,92 @@ void AddDesignDerivatives(SEXP dptr_, SEXP mptr_, SEXP is_gaussian_){
   XPtr<glmmr::Covariance> mptr(mptr_);
   dptr->addDesign(*mptr, is_gaussian);
 }
+
+ 
+ // Inputs: 
+ //   A_list: list of p_r x n matrices (A_r = X_r^T L_r^T, precomputed in R)
+ //   c_list: list of length-p_r vectors
+ //   exp_cond: integer vector length n, 1..K
+ //   w: length-R vector of response weights
+ //   rho, tol_abs, tol_rel, max_iter
+ // Returns: normalised mu (length K)
+ 
+ // [[Rcpp::export]]
+ Eigen::VectorXd socp_admm(Rcpp::List A_list, Rcpp::List c_list,
+                           Eigen::VectorXi exp_cond, Eigen::VectorXd w,
+                           double rho = 1.0, double tol = 1e-6, int max_iter = 2000) {
+   const int R = A_list.size();
+   const int n = exp_cond.size();
+   
+   // Precompute per-response: Cholesky of A A^T, particular solution z0, 
+   // and a function to apply P = I - A^T (AA^T)^{-1} A
+   std::vector<MatrixXd> A(R);
+   std::vector<VectorXd> z0(R), z(R), v(R), u(R);
+   std::vector<LLT<MatrixXd>> lltAAt(R);
+   
+   for (int r = 0; r < R; ++r) {
+     A[r] = Rcpp::as<MatrixXd>(A_list[r]);
+     VectorXd c = Rcpp::as<VectorXd>(c_list[r]);
+     lltAAt[r].compute(A[r] * A[r].transpose());
+     z0[r] = A[r].transpose() * lltAAt[r].solve(c);
+     z[r] = z0[r]; 
+     v[r] = z0[r]; 
+     u[r] = VectorXd::Zero(n);
+   }
+   
+   // Group indices
+   const int K = exp_cond.maxCoeff();
+   std::vector<std::vector<int>> groups(K);
+   for (int k = 0; k < n; ++k) groups[exp_cond[k]-1].push_back(k);
+   
+   for (int it = 0; it < max_iter; ++it) {
+     // z-update: z_r = z0_r + P_r (v_r - u_r)
+     for (int r = 0; r < R; ++r) {
+       VectorXd t = v[r] - u[r];
+       VectorXd At_t = A[r] * t;
+       z[r] = t - A[r].transpose() * lltAAt[r].solve(At_t) + z0[r] 
+       - (z0[r] - A[r].transpose() * lltAAt[r].solve(A[r] * z0[r]));
+       // simplified: z[r] = z0[r] + (t - A^T (AA^T)^{-1} A t)
+     }
+     
+     // v-update: block soft-threshold per (r, group)
+     double primal_res = 0, dual_res = 0;
+     for (int r = 0; r < R; ++r) {
+       VectorXd v_old = v[r];
+       VectorXd q = z[r] + u[r];
+       v[r].setZero();
+       for (const auto& idx : groups) {
+         double nrm = 0;
+         for (int k : idx) nrm += q[k]*q[k];
+         nrm = std::sqrt(nrm);
+         double thr = w[r] / rho;
+         if (nrm > thr) {
+           double s = 1.0 - thr/nrm;
+           for (int k : idx) v[r][k] = s * q[k];
+         }
+       }
+       dual_res += (rho * (v[r] - v_old)).squaredNorm();
+     }
+     
+     // u-update and residuals
+     for (int r = 0; r < R; ++r) {
+       VectorXd pr = z[r] - v[r];
+       primal_res += pr.squaredNorm();
+       u[r] += pr;
+     }
+     
+     if (std::sqrt(primal_res) < tol && std::sqrt(dual_res) < tol) break;
+   }
+   
+   // Recover mu
+   VectorXd mu = VectorXd::Zero(K);
+   for (int k = 0; k < K; ++k) {
+     for (const auto& idx : groups[k]) { /* gather */ }
+     for (int r = 0; r < R; ++r) {
+       double nrm = 0;
+       for (int k_idx : groups[k]) nrm += v[r][k_idx]*v[r][k_idx];
+       mu[k] += w[r] * std::sqrt(nrm);
+     }
+   }
+   return mu / mu.sum();
+ }

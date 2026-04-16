@@ -28,3 +28,7 @@ AddDesignDerivatives <- function(dptr_, mptr_, is_gaussian_) {
     invisible(.Call(`_glmmrOptim_AddDesignDerivatives`, dptr_, mptr_, is_gaussian_))
 }
 
+socp_admm <- function(A_list, c_list, exp_cond, w, rho = 1.0, tol = 1e-6, max_iter = 2000L) {
+    .Call(`_glmmrOptim_socp_admm`, A_list, c_list, exp_cond, w, rho, tol, max_iter)
+}
+

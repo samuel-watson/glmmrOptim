@@ -96,6 +96,23 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// socp_admm
+Eigen::VectorXd socp_admm(Rcpp::List A_list, Rcpp::List c_list, Eigen::VectorXi exp_cond, Eigen::VectorXd w, double rho, double tol, int max_iter);
+RcppExport SEXP _glmmrOptim_socp_admm(SEXP A_listSEXP, SEXP c_listSEXP, SEXP exp_condSEXP, SEXP wSEXP, SEXP rhoSEXP, SEXP tolSEXP, SEXP max_iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type A_list(A_listSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type c_list(c_listSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXi >::type exp_cond(exp_condSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type w(wSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(socp_admm(A_list, c_list, exp_cond, w, rho, tol, max_iter));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_glmmrOptim_setParallelOptim", (DL_FUNC) &_glmmrOptim_setParallelOptim, 2},
@@ -104,6 +121,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_glmmrOptim_CreateDerivatives", (DL_FUNC) &_glmmrOptim_CreateDerivatives, 0},
     {"_glmmrOptim_FindOptimumDesign", (DL_FUNC) &_glmmrOptim_FindOptimumDesign, 2},
     {"_glmmrOptim_AddDesignDerivatives", (DL_FUNC) &_glmmrOptim_AddDesignDerivatives, 3},
+    {"_glmmrOptim_socp_admm", (DL_FUNC) &_glmmrOptim_socp_admm, 7},
     {NULL, NULL, 0}
 };
 
