@@ -2,8 +2,14 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' Disable or enable parallelised computing
-NULL
-
+#' 
+#' By default, the package will use multithreading for many calculations if OpenMP is 
+#' available on the system. For multi-user systems this may not be desired, so parallel
+#' execution can be disabled with this function.
+#' 
+#' @param parallel_ Logical indicating whether to use parallel computation (TRUE) or disable it (FALSE)
+#' @param cores_ Number of cores for parallel execution
+#' @return None, called for effects
 setParallelOptim <- function(parallel_, cores_ = 2L) {
     invisible(.Call(`_glmmrOptim_setParallelOptim`, parallel_, cores_))
 }

@@ -161,16 +161,16 @@ ds <- DesignSpace$new(des)
 
 #find the optimal design of size 30 individuals using reverse greedy search
 # change algo=1 for local search, and algo = 2 for greedy search
-opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
+opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3, verbose = FALSE)
 
 #let the experimental condition be the cluster
 # these experimental conditions are independent of one another
 ds <- DesignSpace$new(des,experimental_condition = df$cl)
 # now find the optimal 4 clusters to include
 # approximately, finding the weights for each condition
-opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
+opt <- ds$optimal(4,C=list(c(rep(0,5),1)), verbose = FALSE)
 # or use the local search algorithm
-opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1)
+opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1, verbose = FALSE)
 
 #robust optimisation using two designs
 des2 <- Model$new(
@@ -184,7 +184,7 @@ des2 <- Model$new(
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
 \donttest{
-opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),algo=1)
+opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),algo=1, verbose = FALSE)
 }
 
 ## ------------------------------------------------
@@ -480,16 +480,16 @@ ds <- DesignSpace$new(des)
 
 #find the optimal design of size 30 individuals using reverse greedy search
 # change algo=1 for local search, and algo = 2 for greedy search
-opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3)
+opt2 <- ds$optimal(30,C=list(c(rep(0,5),1)),algo=3, verbose = FALSE)
 
 #let the experimental condition be the cluster
 # these experimental conditions are independent of one another
 ds <- DesignSpace$new(des,experimental_condition = df$cl)
 # now find the optimal 4 clusters to include
 # approximately, finding the weights for each condition
-opt <- ds$optimal(4,C=list(c(rep(0,5),1)))
+opt <- ds$optimal(4,C=list(c(rep(0,5),1)), verbose = FALSE)
 # or use the local search algorithm
-opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1)
+opt <- ds$optimal(4,C=list(c(rep(0,5),1)),use_combin = TRUE,algo=1, verbose = FALSE)
 
 #robust optimisation using two designs
 des2 <- Model$new(
@@ -503,7 +503,7 @@ des2 <- Model$new(
 ds <- DesignSpace$new(des,des2)
 #weighted average assuming equal weights using local search
 \donttest{
-opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),algo=1)
+opt <- ds$optimal(30,C=list(c(rep(0,5),1),c(rep(0,5),1)),algo=1, verbose = FALSE)
 }
 }
 \if{html}{\out{</div>}}
