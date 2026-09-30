@@ -1,7 +1,7 @@
 #include <glmmr/covariance.hpp>
 #include <glmmr/openmpheader.h>
 #include <glmmr/matrixfield.h>
-#include <cmath> 
+#include <cmath>
 #include <RcppEigen.h>
 #include <progress.hpp>
 #include <progress_bar.hpp>
@@ -23,6 +23,21 @@ struct lambda_as_visitor_wrapper : Func {
   template<typename S,typename I>
   void init(const S& v, I i, I j) { return Func::operator()(v,i,j); }
 };
+
+}
+}
+
+namespace Eigen {
+namespace internal {
+template<typename Func>
+struct functor_traits<glmmr::OptimEigen::lambda_as_visitor_wrapper<Func>> {
+  enum { Cost = 1, PacketAccess = false, LinearAccess = false, IsRepeatable = true };
+};
+}
+}
+
+namespace glmmr {
+namespace OptimEigen {
 
 template<typename Mat, typename Func>
 inline void visit_lambda(const Mat& m, const Func& f)
